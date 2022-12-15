@@ -1,0 +1,926 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Parameters:
+  CIDRBlock:
+    Description: Bloque CIDR para el despliegue del Core Serverless Con Mascara 16
+    Type: String
+    Default: 10.128.0.0/16
+  CidrIpInboundPublicSubnets:
+    Description: Bloque CIDR para los security group de las subredes publicas
+    Type: String
+    Default: 0.0.0.0/0    
+  DeploySubnetsChannels:
+    Default: "false:false:true"
+    Description: Indica si se debe desplegar o no las subredes públicas o privadas de Channels
+    Type: String 
+  CIDRBase:
+    Description: CIDR Base
+    Type: String
+    Default: 10.128
+  DeploySubnetsLoans:
+    Default: "false:false:true"
+    Description: Indica si se debe desplegar o no las subredes públicas o privadas de proposito Loans
+    Type: String 
+  VpcName:
+    Description: Nombre de la VPC
+    Type: String
+    Default: cobis-ach-service
+  DeploySubnetsDemandDepositsAccounts: 
+    Default: "false:false:true"
+    Description: Indica si se debe desplegar o no las subredes públicas o privadas de proposito Demand Deposits
+    Type: String
+  DeploySubnetsTradeInvestments:
+    Default: "false:false:true"
+    Description: Indica si se debe desplegar o no las subredes públicas o privadas de Trade Investments
+    Type: String   
+  Mask:
+    Description: Mascara subnets
+    Type: String
+    Default: 16
+  ApplicationsPortsBackPri:
+    Default: "8078:8079"
+    Description: Rango de puertos para security group back pri
+    Type: String  
+  AvailabilityZones:
+    Description: Rango de zonas disponibilidad
+    Type: String
+    Default: "us-east-1,us-east-2"
+  RdsEngineMode:
+    Description: Tipo de cluster a usar para el motor de base de datos
+    Type: String
+    Default: serverless
+  ArtifactRepositoryCidrIpPort:
+    Description : "Bloque de Ips y puerto de repositorio de artefactos(nexus) utilizado para generar permisos de salida requeridos por el Job Security de Serenity, Primer valor: Ip, Segundo valor: Puerto. Si el parametro se envia sin valor no se genera ningun acceso."
+    Type: String
+    Default: 0.0.0.0/0:8000    
+  SizeAvailabilityZones:
+    Description: Longitud de zona disponibilidad
+    Type: String
+    Default: 2
+  GenerateVpcEndpoints:
+    Description: Define si se desea crear o no el recurso de VPC Endpoint.
+    Type: String
+    Default: false
+  subnetIDs:
+    Type: CommaDelimitedList
+  microServiceName:
+    Type: String
+  dockerTag:
+    Type: String
+  dockerEcrRepositoryUrl:
+    Type: String
+  dockerXrayTag:
+    Type: String
+  dockerXrayEcrRepositoryUrl:
+    Type: String
+  clusterECSId:
+    Type: String
+  clusterECSName:
+    Type: String
+  microServicePort:
+    Type: String
+  vpcId:
+    Description: vpcId shared
+    Type: String
+  publicLoadBalancer:
+    Description: LoadBalancer to expose service
+    Type: String
+  healthCheckUrl:
+    Description: Health Check Url
+    Type: String
+  profile:
+    Description: Service profile
+    Type: String
+  timezone:
+    Description: Timezone
+    Type: String
+  createNlb:
+    Description: Si despliega load balancer
+    Type: String
+    Default: false
+  microserviceSecretArn:
+    Description: Timezone
+    Type: String
+  AWSPOOLID:
+    Description: AWS POOL ID Cognito
+    Type: String
+  AWSPOOLIDAPP:
+    Description: AWS POOL APP ID Cognito
+    Type: String
+  COBISRESTRPCCONNECTIONCONFIG0NAME:
+    Description: Name
+    Type: String
+  COBISRESTRPCCONNECTIONCONFIG0URL:
+    Description: Url
+    Type: String
+  COBISRESTRPCCONNECTIONCONFIG0PATH:
+    Description: Path
+    Type: String
+  COBISRESTRPCCONNECTIONCONFIG0TIMEOUT:
+    Description: Timeout
+    Type: String
+  COBISRESTRPCCONNECTIONCONFIG0APIKEY:
+    Description: ApiKey por connection
+    Type: String
+  COBISRESTRPCCONNECTIONCONFIG1NAME:
+    Description: Name
+    Type: String
+  COBISRESTRPCCONNECTIONCONFIG1URL:
+    Description: Url
+    Type: String
+  COBISRESTRPCCONNECTIONCONFIG1PATH:
+    Description: Path
+    Type: String
+  COBISRESTRPCCONNECTIONCONFIG1TIMEOUT:
+    Description: Timeout
+    Type: String
+  COBISRESTRPCCONNECTIONCONFIG1APIKEY:
+    Description: ApiKey por connection
+    Type: String
+  COBISRESTRPCCONNECTIONCONFIG2NAME:
+    Description: Name
+    Type: String
+  COBISRESTRPCCONNECTIONCONFIG2URL:
+    Description: Url
+    Type: String
+  COBISRESTRPCCONNECTIONCONFIG2PATH:
+    Description: Path
+    Type: String
+  COBISRESTRPCCONNECTIONCONFIG2TIMEOUT:
+    Description: Timeout
+    Type: String
+  COBISRESTRPCCONNECTIONCONFIG2APIKEY:
+    Description: ApiKey por connection
+    Type: String
+
+  SECRETMANAGERUSERNAME:
+    Description: SECRET_MANAGER_USERNAME
+    Type: String
+
+  ENVIRONMENTPREFIX:
+    Description: ENVIRONMENT_PREFIX
+    Type: String
+
+  MODULE:
+    Description: MODULE
+    Type: String
+
+  taskDefinitionMemory:
+    Description: Task definition memory
+    Type: Number
+  taskDefinitionCpu:
+    Description: Task definition CPU
+    Type: Number
+  securityGroupsXsellIDs:
+    Type: CommaDelimitedList
+  publicNlbLoadBalancer:
+    Type: String
+  AchSqlTimeout:
+    Description: Timeout para query de ordenes
+    Type: String
+
+  #Variables migracion job
+  AwsAccountId:
+    Type: String
+    Description: Identificador de la cuenta AWS donde se desplegará el microservicio.
+  AwsRegion:
+    Type: String
+    AllowedValues: [us-east-2, us-west-2, us-east-1]
+    ConstraintDescription: must specify us-east-2,us-west-2,us-east-1.
+    Description: Región en la cual se realizará el despliegue del microservicio.
+  Organization:
+    Type: String
+    Description: "Identificador del dueño componente."
+  Package:
+    Type: String
+    Description: "Identificador del paquete de productos comerciales al que se asocia el componente."
+  Project:
+    Type: String
+    Description: "Identificador del proyecto por el que se crea el componente."
+  EnvironmentId:
+    Type: String
+    Description: "Identificador del ambiente."
+  EnvironmentIdBase:
+    Type: String
+    Description: "Prefijo de recursos de la infraestructura base para referenciar en el microservicio. Pueden ser [dev, qa, stg, prod u otro personalizado]"
+  EnvironmentType:
+    Type: String
+    AllowedValues: [PRODUCTION, QUALITY, STAGING, DEVELOPMENT]
+    ConstraintDescription: must specify PRODUCTION, STAGING, QUALITY or DEVELOPMENT.
+  tenantId:
+    Type: String
+    Description: "Identificador del tenant."
+  version:
+    Type: String
+    Default: "1.0.0"
+    Description: "Versión del módulo o microservicio al que pertenece el componente."
+  GeneralPurposeSecurityGroupsIds:
+    Type: String
+    Description: "Identificador del security group donde se ejecutará la lógica de negocio del microservicio."
+  LogLevel:
+    Type: String
+    AllowedValues: [INFO, DEBUG, WARNING, ERROR, TRACE]
+    ConstraintDescription: must specify INFO, DEBUG, WARNING or TRACE.
+    Description: "Nivel de escritura de logs del microservicio: INFO, DEBUG, WARNING, TRACE."
+  ProcessingType:
+    Type: String
+    Default: "BATCH"
+  AWSBatchServiceRole:
+    Type: String
+    Description: "Rol para el servicio del entorno computacional en AWS Batch."
+  AuthenticationSecretArn:
+    Type: String
+    Description: "Arn del secreto de autenticacion"
+
+  # PARAMETROS TRANSFORM
+  BatchImportDataBase:
+    Type: String
+    Description: "Esquema de bd donde se importan los datos por el step function."
+  BatchImportTable:
+    Type: String
+    Description: "Tabla donde se importan los datos por el step function."
+  GlueImportDataBase:
+    Type: String
+    Description: "Esquema de bd para el servicio de Glue."
+  GlueImportTable:
+    Type: String
+    Description: "Tabla virtual para el servicio de Glue."
+  OriginPacs004008:
+    Description: "pac de origin para el pac 004-008"
+    Type: String
+    Default: "pacs.008.001.07 - TDIR2"
+  OriginPacs004003:
+    Description: "pac de origin para el pac 004-003"
+    Type: String
+    Default: "pacs.003.001.07"
+  OriginPacs004056:
+    Description: "pac de origin para el pac 004-056"
+    Type: String
+    Default: "camt.056.001.06 - TDIR2"
+  OriginPacs002008:
+    Description: "pac de origin para el pac 002-008"
+    Type: String
+    Default: "pacs.008.001.07 - TDIR2"
+  OriginPacs002003:
+    Description: "pac de origin para el pac 002-003"
+    Type: String
+    Default: "pacs.003.001.07"
+  OriginAcmt023:
+    Description: "pac de origin para el acmt 023"
+    Type: String
+    Default: "acmt.023.001.02 - TDIR1"
+  OriginAcmt022008:
+    Description: "pac de origin para el acmt 022-008"
+    Type: String
+    Default: "pacs.008.001.07 - TDIR2"
+  LoggingBucket:
+    Default: ""
+    Type: String
+    Description: "Bucket en el cual se almacenaran los logs de acceso a s3"
+  TransferFamilyUserOut:
+    Description: Nombre de usuario de coneccion a al SFTP en el directorio de salida
+    Type: String
+  TransferFamilyUserIn:
+    Description: Nombre de usuario de coneccion a al SFTP en el directorio de entrada
+    Type: String
+  TransferFamilyServerId:
+    Description: Instancia del servidor de transfer family que se encuentra ejecutando
+    Type: String
+  TransferFamilyUserPublicKey:
+    Description: Llave publica que se utiliza para la autenticación de los dos usuarios
+    Type: String
+    Default: "ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAyimIYz4bsa8Q2m7k6nA9yDhTGN1uKglt9xeUpSws7j0/6D4dL/IlOTuvTcHNIe9PMYCxnGUBNhUfEeo99Xk2TenCQIlWfuDgFQetSW0iQwW2LpkHb+JyAw1z57n1ZoCjHPOzpr101tYiUmGDM4zggJK4WJxcUPoR3xZIvuyl+r2ev6ZT+Iv7btFtojWQPfO7mu6whmmjm8qGnICFZyj7cC8fADfXQnpQKtnCOMuEgtcng1ZNllwjlnYONmLF19BKV33+EsytfGWSa43cPm17V4IlmJIjOQAsZuaP7heUlx6qBIBOV4TN5O2SOstayxLB55Wejl3aSE4Qo/NBGbzsow== rsa-key-20220126"
+  AuthenticationPathLogin:
+    Description: Path de autenticacion del usuario de oficiales
+    Type: String
+  AuthenticationPathRole:
+    Description: Path de autenticacion del usuario de oficiales
+    Type: String
+  integrationAdminCatalogsBaseUrl:
+    Description: Url del api de admin generico.
+    Type: String
+  integrationAdminCatalogsPath:
+    Description: Path del api de admin generico.
+    Type: String
+  integrationAdminCatalogsTimeout:
+    Description: Timeout del api de admin generico.
+    Type: String
+  IntegrationDdaBaseUrl:
+    Description: Url del api de negocio de demand deposits generico
+    Type: String
+  IntegrationDdaTrnBaseUrl:
+    Description: Url del api de negocio de demand deposits transaccional
+    Type: String
+  IntegrationDdaApikey:
+    Description: ApiKey del api de negocio de demand deposits
+    Type: String
+
+  IntegrationDdaTrnApikey:
+    Description: ApiKey del api de negocio de demand deposits transaccional
+    Type: String
+  IntegrationBaseLoanURL:
+    Description: Url del api de negocio de prestamos
+    Type: String
+  IntegrationBasePaymentLoanURL:
+    Description: Url del api de negocio de pagos de prestamos
+    Type: String
+  IntegrationBaseTransactionalLoanURL:
+    Description: Url del api de negocio transaccional de prestamos
+    Type: String
+  IntegrationLoanApikey:
+    Description: ApiKey del api de negocio prestamos
+    Type: String
+  IntegrationLoanPaymentsApikey:
+    Description: ApiKey del api de negocio de pagos de prestamos
+    Type: String
+  IntegrationLoanTransactionalApikey:
+    Description: ApiKey del api de negocio transaccional de prestamos
+    Type: String
+  taskDefinitionMemoryNlb:
+    Description: Task definition memory
+    Type: Number
+  taskDefinitionCpuNlb:
+    Description: Task definition CPU
+    Type: Number
+  BatchMemory:
+    Description: Memoria asignada al proceso batch
+    Type: Number
+    AllowedValues: [512,1024,2048,3072,4096]
+  BatchVcpu:
+    Description: Memoria asignada al proceso batch
+    Type: Number
+    AllowedValues: [0.25,0.5,1,2,4]
+  LoadBalancerUrl:
+    Description: Url de balanceador de carga para el Ach Service
+    Type: String
+  FileProcessingServicePath:
+    Description: Ruta del servicio de carga de archivos para el Ach Service
+    Type: String
+  HealthCheckIntervalSeconds:
+    Description: Health check interval in seconds
+    Type: Number
+  UnhealthyThresholdCount:
+    Description: Unhealthy threshold count
+    Type: Number
+  ServiceScalingMaxCapacity:
+    Description: Número máximo de instancias
+    Type: Number
+  ServiceScalingMinCapacity:
+    Description: Número mínimo de instancias
+    Type: Number
+  SecurityGroupsXsellCidrIp:
+    Description: Red que se va a abrir en la entrada en el grupo de seguridad de xsell
+    Type: String
+  CWCSecurityGroupId:
+    Description: Security group id asociado al cwc usado para abrir un puerto de salida
+    Type: String
+  BatchProcessingPath:
+    Description: Path del api de procesamiento de ordenes
+    Type: String
+  LambdaProcessingLogLevel:
+    Description: Nivel de log del lambda que ejecuta la llamada al api de procesamiento
+    Type: String
+  IntegrationTDepositsBaseURL:
+    Description: Integration TimeDeposits BaseURL
+    Type: String
+  IntegrationTDepositsApikey:
+    Description: Integration TimeDeposits ApiKey
+    Type: String  
+  IntegrationPconsolidatorBaseURL:
+    Description: Integration TimeDeposits BaseURL
+    Default: ""
+    Type: String
+  IntegrationPconsolidatorApikey:
+    Description: Integration TimeDeposits ApiKey
+    Default: ""
+    Type: String  
+  LogRetentionDays:
+    Type: Number
+    Description: "Indica el número de días de retención de logs."
+  IntegrationDdaReadTimeout:
+    Description: Integration Demand Deposits Read Timeout
+    Type: Number
+  IntegrationDdaConnectTimeout:
+    Description: Integration Demand Connect Timeout
+    Type: Number
+  IntegrationLoanReadTimeout:
+    Description: Integration Loans Read Timeout
+    Type: Number
+  IntegrationLoanConnectTimeout:
+    Description: Integration Loans Connect Timeout
+    Type: Number
+  # PARAMETROS global-database
+  MigrateDynamoDBTables:
+    Description: Define si se quiere migrar las tablas de dynamodb a la estructura global-tables.
+    Type: String
+    Default: false
+    AllowedValues: [true, false]
+  DrEnable:
+    Description: Define si se quiere crear tablas globales.
+    Type: String
+    Default: false
+    AllowedValues: [true, false]
+  DropDynamoDBTables:
+    Description: Define si se quiere eliminar las tablas una ves migrada la información.
+    Type: String
+    Default: false
+    AllowedValues: [true, false]
+  SuffixGlobalDynamoDbTable:
+    Description: Texto que se añade al ginal del nombre de las tablas globales.
+    Type: String
+    Default: '_gt'
+  DynamoJobTableBillingMode:
+    Type: String
+    Default: PAY_PER_REQUEST
+    Description: Tipo de cobro para la tabla de JOB en dynamo.
+  AwsDrRegion:
+    Type: String
+    Default: 'us-west-2'
+    Description: Region alterna que utiliza la replicacion.
+  # PARAMETROS ECR  
+  RepositoryNameText:
+    Type: String
+    Description: "Nombre del repositorio" 
+    Default: 'cobis/service/ach'
+
+Conditions:
+  isNotServerless: !Not [!Equals [ !Ref RdsEngineMode , "serverless" ] ]
+  IsDrEnable: !Equals [ !Ref DrEnable  , true ]
+  IsDeployDynamoDBTables: !Equals [ !Ref DropDynamoDBTables  , false ]
+
+
+Resources:
+  SecurityGroupACH:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Inbound and outbound traffic for service
+      GroupName: 'ach-service-security-group'
+      VpcId: !Ref vpcId
+      
+      Tags:
+        - Key: "Name"
+          Value: "ach service security group"
+      SecurityGroupEgress:
+      - CidrIp: 10.128.0.0/16 
+        FromPort: 3333
+        IpProtocol: tcp
+        ToPort: 3333
+      - CidrIp: 10.128.0.0/16
+        FromPort: 8079
+        IpProtocol: tcp
+        ToPort: 8079
+      SecurityGroupIngress:
+      - CidrIp: 10.128.0.0/16  
+        FromPort: 443
+        IpProtocol: tcp
+        ToPort: 443
+
+  ServiceECSInfraestructure:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: template-service.yaml
+      Parameters:
+        Organization: !Ref Organization
+        Package: !Ref Package
+        Version: !Ref version
+        EnvironmentType: !Ref EnvironmentType
+        EnvironmentId: !Ref EnvironmentId
+        TenantId: !Ref tenantId
+        Project: !Ref Project
+        Module: !Ref MODULE
+        ProcessingType: "BATCH"
+        subnetIDs: !Join
+          - ','
+          - !Ref subnetIDs
+        microServiceName: !Ref microServiceName
+        dockerTag: !Ref dockerTag
+        dockerEcrRepositoryUrl: !Ref dockerEcrRepositoryUrl
+        dockerXrayTag: !Ref dockerXrayTag
+        dockerXrayEcrRepositoryUrl: !Ref dockerXrayEcrRepositoryUrl
+        clusterECSId: !Ref clusterECSId
+        clusterECSName: !Ref clusterECSName
+        microServicePort: !Ref microServicePort
+        vpcId: !Ref vpcId
+        publicLoadBalancer: !Ref publicLoadBalancer
+        healthCheckUrl: !Ref healthCheckUrl
+        profile: !Sub 'achrest,${profile}'
+        timezone: !Ref timezone
+        createNlb: !Ref createNlb
+        microserviceSecretArn: !Ref microserviceSecretArn
+        AWSPOOLID: !Ref AWSPOOLID
+        AWSPOOLIDAPP: !Ref AWSPOOLIDAPP
+        COBISRESTRPCCONNECTIONCONFIG0NAME: !Ref COBISRESTRPCCONNECTIONCONFIG0NAME
+        COBISRESTRPCCONNECTIONCONFIG0URL: !Ref COBISRESTRPCCONNECTIONCONFIG0URL
+        COBISRESTRPCCONNECTIONCONFIG0PATH: !Ref COBISRESTRPCCONNECTIONCONFIG0PATH
+        COBISRESTRPCCONNECTIONCONFIG0TIMEOUT: !Ref COBISRESTRPCCONNECTIONCONFIG0TIMEOUT
+        COBISRESTRPCCONNECTIONCONFIG0APIKEY: !Ref COBISRESTRPCCONNECTIONCONFIG0APIKEY
+        COBISRESTRPCCONNECTIONCONFIG1NAME: !Ref COBISRESTRPCCONNECTIONCONFIG1NAME
+        COBISRESTRPCCONNECTIONCONFIG1URL: !Ref COBISRESTRPCCONNECTIONCONFIG1URL
+        COBISRESTRPCCONNECTIONCONFIG1PATH: !Ref COBISRESTRPCCONNECTIONCONFIG1PATH
+        COBISRESTRPCCONNECTIONCONFIG1TIMEOUT: !Ref COBISRESTRPCCONNECTIONCONFIG1TIMEOUT
+        COBISRESTRPCCONNECTIONCONFIG1APIKEY: !Ref COBISRESTRPCCONNECTIONCONFIG1APIKEY
+        COBISRESTRPCCONNECTIONCONFIG2NAME: !Ref COBISRESTRPCCONNECTIONCONFIG2NAME
+        COBISRESTRPCCONNECTIONCONFIG2URL: !Ref COBISRESTRPCCONNECTIONCONFIG2URL
+        COBISRESTRPCCONNECTIONCONFIG2PATH: !Ref COBISRESTRPCCONNECTIONCONFIG2PATH
+        COBISRESTRPCCONNECTIONCONFIG2TIMEOUT: !Ref COBISRESTRPCCONNECTIONCONFIG2TIMEOUT
+        COBISRESTRPCCONNECTIONCONFIG2APIKEY: !Ref COBISRESTRPCCONNECTIONCONFIG2APIKEY
+        SECRETMANAGERUSERNAME: !Ref SECRETMANAGERUSERNAME
+        ENVIRONMENTPREFIX: !Ref ENVIRONMENTPREFIX
+        MODULE: !Ref MODULE
+        taskDefinitionMemory: !Ref taskDefinitionMemory
+        taskDefinitionCpu: !Ref taskDefinitionCpu
+        securityGroupsXsellIDs: !Join
+          - ','
+          - !Ref securityGroupsXsellIDs
+        integrationAdminCatalogsBaseUrl: !Ref integrationAdminCatalogsBaseUrl
+        integrationAdminCatalogsPath: !Ref integrationAdminCatalogsPath
+        integrationAdminCatalogsTimeout: !Ref integrationAdminCatalogsTimeout
+        IntegrationDdaBaseUrl: !Ref IntegrationDdaBaseUrl
+        IntegrationDdaTrnBaseUrl: !Ref IntegrationDdaTrnBaseUrl
+        IntegrationDdaApikey: !Ref IntegrationDdaApikey
+        IntegrationDdaTrnApikey: !Ref IntegrationDdaTrnApikey
+        IntegrationBaseLoanURL: !Ref IntegrationBaseLoanURL
+        IntegrationBasePaymentLoanURL: !Ref IntegrationBasePaymentLoanURL
+        IntegrationBaseTransactionalLoanURL: !Ref IntegrationBaseTransactionalLoanURL
+        IntegrationLoanApikey: !Ref IntegrationLoanApikey
+        IntegrationLoanPaymentsApikey: !Ref IntegrationLoanPaymentsApikey
+        IntegrationLoanTransactionalApikey: !Ref IntegrationLoanTransactionalApikey
+        IntegrationPconsolidatorBaseURL: !Ref IntegrationPconsolidatorBaseURL
+        IntegrationPconsolidatorApikey: !Ref IntegrationPconsolidatorApikey
+        AchSqlTimeout: !Ref AchSqlTimeout
+        HealthCheckIntervalSeconds: !Ref HealthCheckIntervalSeconds
+        UnhealthyThresholdCount: !Ref UnhealthyThresholdCount
+        ServiceScalingMaxCapacity: !Ref ServiceScalingMaxCapacity
+        ServiceScalingMinCapacity: !Ref ServiceScalingMinCapacity
+        SecurityGroupsXsellCidrIp: !Ref SecurityGroupsXsellCidrIp
+        CWCSecurityGroupId: !Ref CWCSecurityGroupId
+        IntegrationTDepositsBaseURL: !Ref IntegrationTDepositsBaseURL
+        IntegrationTDepositsApikey: !Ref IntegrationTDepositsApikey
+        LogRetentionDays: !Ref LogRetentionDays
+        IntegrationDdaReadTimeout: !Ref IntegrationDdaReadTimeout
+        IntegrationDdaConnectTimeout: !Ref IntegrationDdaConnectTimeout
+        IntegrationLoanReadTimeout: !Ref IntegrationLoanReadTimeout
+        IntegrationLoanConnectTimeout: !Ref IntegrationLoanConnectTimeout
+      Tags:
+        ORGANIZATION: !Ref Organization
+        PACKAGE: !Ref Package
+        VERSION: !Ref version
+        ENVIRONMENT_TYPE: !Ref EnvironmentType
+        ENVIRONMENT_ID: !Ref EnvironmentId
+        TENANT_ID: !Ref tenantId
+        PROJECT: !Ref Project
+        MODULE: !Ref MODULE
+        PROCESSING_TYPE: "ONLINE"
+
+
+  ServiceECSNlbInfraestructure:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: template-service-nlb.yaml
+      Parameters:
+        Organization: !Ref Organization
+        Package: !Ref Package
+        Version: !Ref version
+        EnvironmentType: !Ref EnvironmentType
+        EnvironmentId: !Ref EnvironmentId
+        TenantId: !Ref tenantId
+        Project: !Ref Project
+        Module: !Ref MODULE
+        ProcessingType: "BATCH"
+        subnetIDs: !Join
+          - ','
+          - !Ref subnetIDs
+        microServiceName: !Ref microServiceName
+        LogRetentionDays: !Ref LogRetentionDays
+        dockerTag: !Ref dockerTag
+        dockerEcrRepositoryUrl: !Ref dockerEcrRepositoryUrl
+        dockerXrayTag: !Ref dockerXrayTag
+        dockerXrayEcrRepositoryUrl: !Ref dockerXrayEcrRepositoryUrl
+        clusterECSId: !Ref clusterECSId
+        clusterECSName: !Ref clusterECSName
+        microServicePort: !Ref microServicePort
+        vpcId: !Ref vpcId
+        publicNlbLoadBalancer: !Ref publicNlbLoadBalancer
+        healthCheckUrl: !Ref healthCheckUrl
+        profile: !Sub 'achrest,${profile}'
+        timezone: !Ref timezone
+        createNlb: !Ref createNlb
+        microserviceSecretArn: !Ref microserviceSecretArn
+        AWSPOOLID: !Ref AWSPOOLID
+        AWSPOOLIDAPP: !Ref AWSPOOLIDAPP
+        COBISRESTRPCCONNECTIONCONFIG0NAME: !Ref COBISRESTRPCCONNECTIONCONFIG0NAME
+        COBISRESTRPCCONNECTIONCONFIG0URL: !Ref COBISRESTRPCCONNECTIONCONFIG0URL
+        COBISRESTRPCCONNECTIONCONFIG0PATH: !Ref COBISRESTRPCCONNECTIONCONFIG0PATH
+        COBISRESTRPCCONNECTIONCONFIG0TIMEOUT: !Ref COBISRESTRPCCONNECTIONCONFIG0TIMEOUT
+        COBISRESTRPCCONNECTIONCONFIG0APIKEY: !Ref COBISRESTRPCCONNECTIONCONFIG0APIKEY
+        COBISRESTRPCCONNECTIONCONFIG1NAME: !Ref COBISRESTRPCCONNECTIONCONFIG1NAME
+        COBISRESTRPCCONNECTIONCONFIG1URL: !Ref COBISRESTRPCCONNECTIONCONFIG1URL
+        COBISRESTRPCCONNECTIONCONFIG1PATH: !Ref COBISRESTRPCCONNECTIONCONFIG1PATH
+        COBISRESTRPCCONNECTIONCONFIG1TIMEOUT: !Ref COBISRESTRPCCONNECTIONCONFIG1TIMEOUT
+        COBISRESTRPCCONNECTIONCONFIG1APIKEY: !Ref COBISRESTRPCCONNECTIONCONFIG1APIKEY
+        COBISRESTRPCCONNECTIONCONFIG2NAME: !Ref COBISRESTRPCCONNECTIONCONFIG2NAME
+        COBISRESTRPCCONNECTIONCONFIG2URL: !Ref COBISRESTRPCCONNECTIONCONFIG2URL
+        COBISRESTRPCCONNECTIONCONFIG2PATH: !Ref COBISRESTRPCCONNECTIONCONFIG2PATH
+        COBISRESTRPCCONNECTIONCONFIG2TIMEOUT: !Ref COBISRESTRPCCONNECTIONCONFIG2TIMEOUT
+        COBISRESTRPCCONNECTIONCONFIG2APIKEY: !Ref COBISRESTRPCCONNECTIONCONFIG2APIKEY
+        SECRETMANAGERUSERNAME: !Ref SECRETMANAGERUSERNAME
+        ENVIRONMENTPREFIX: !Ref ENVIRONMENTPREFIX
+        MODULE: !Ref MODULE
+        taskDefinitionMemoryNlb: !Ref taskDefinitionMemoryNlb
+        taskDefinitionCpuNlb: !Ref taskDefinitionCpuNlb
+        securityGroupsXsellIDs: !Join
+          - ','
+          - !Ref securityGroupsXsellIDs
+        integrationAdminCatalogsBaseUrl: !Ref integrationAdminCatalogsBaseUrl
+        integrationAdminCatalogsPath: !Ref integrationAdminCatalogsPath
+        integrationAdminCatalogsTimeout: !Ref integrationAdminCatalogsTimeout
+        IntegrationDdaBaseUrl: !Ref IntegrationDdaBaseUrl
+        IntegrationDdaTrnBaseUrl: !Ref IntegrationDdaTrnBaseUrl
+        IntegrationDdaApikey: !Ref IntegrationDdaApikey
+        IntegrationDdaTrnApikey: !Ref IntegrationDdaTrnApikey
+        IntegrationBaseLoanURL: !Ref IntegrationBaseLoanURL
+        IntegrationBasePaymentLoanURL: !Ref IntegrationBasePaymentLoanURL
+        IntegrationBaseTransactionalLoanURL: !Ref IntegrationBaseTransactionalLoanURL
+        IntegrationLoanApikey: !Ref IntegrationLoanApikey
+        IntegrationLoanPaymentsApikey: !Ref IntegrationLoanPaymentsApikey
+        IntegrationLoanTransactionalApikey: !Ref IntegrationLoanTransactionalApikey
+        AchSqlTimeout: !Ref AchSqlTimeout
+        HealthCheckIntervalSeconds: !Ref HealthCheckIntervalSeconds
+        UnhealthyThresholdCount: !Ref UnhealthyThresholdCount
+        ServiceScalingMaxCapacity: !Ref ServiceScalingMaxCapacity
+        ServiceScalingMinCapacity: !Ref ServiceScalingMinCapacity
+        IntegrationTDepositsBaseURL: !Ref IntegrationTDepositsBaseURL
+        IntegrationTDepositsApikey: !Ref IntegrationTDepositsApikey
+        IntegrationDdaReadTimeout: !Ref IntegrationDdaReadTimeout
+        IntegrationDdaConnectTimeout: !Ref IntegrationDdaConnectTimeout
+        IntegrationLoanReadTimeout: !Ref IntegrationLoanReadTimeout
+        IntegrationLoanConnectTimeout: !Ref IntegrationLoanConnectTimeout
+        IntegrationPconsolidatorBaseURL: !Ref IntegrationPconsolidatorBaseURL
+        IntegrationPconsolidatorApikey: !Ref IntegrationPconsolidatorApikey
+      Tags:
+        ORGANIZATION: !Ref Organization
+        PACKAGE: !Ref Package
+        VERSION: !Ref version
+        ENVIRONMENT_TYPE: !Ref EnvironmentType
+        ENVIRONMENT_ID: !Ref EnvironmentId
+        TENANT_ID: !Ref tenantId
+        PROJECT: !Ref Project
+        MODULE: !Ref MODULE
+        PROCESSING_TYPE: "ONLINE"
+
+  ProcessingInfraestructure:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: template-processing.yaml
+      Parameters:
+        AwsAccountId: !Ref AwsAccountId
+        AwsRegion: !Ref AwsRegion
+        Organization: !Ref Organization
+        Package: !Ref Package
+        Project: !Ref Project
+        EnvironmentId: !Ref EnvironmentId
+        EnvironmentIdBase: !Ref EnvironmentIdBase
+        EnvironmentType: !Ref EnvironmentType
+        TenantId: !Ref tenantId
+        Module: !Ref MODULE
+        ModuleNameInLowerCase: !Ref MODULE
+        Version: !Ref version
+        SubnetIds: !Join
+          - ","
+          - !Ref subnetIDs
+        SecurityGroupIds: !Ref GeneralPurposeSecurityGroupsIds
+        TimeZone: !Ref timezone
+        LogLevel: !Ref LogLevel
+        LoadBalancerUrl: !Ref LoadBalancerUrl
+        microServicePort: !Ref microServicePort
+        ProcessingType: "BATCH"
+        AWSBatchServiceRole: !Ref AWSBatchServiceRole
+        DockerEcrRepositoryUrl: !Ref dockerEcrRepositoryUrl
+        DockerTag: !Ref dockerTag
+        MicroserviceSecretArn: !Ref microserviceSecretArn
+        MicroserviceAuthenticationSecretArn: !Ref AuthenticationSecretArn
+        AchBatchUpdatingLambdaConfiguration: "1024:0:0:0:0:0:INFO"
+        LogRetentionDays: !Ref LogRetentionDays
+        ConnectionConfigName0: !Ref COBISRESTRPCCONNECTIONCONFIG0NAME
+        ConnectionConfigUrl0: !Ref COBISRESTRPCCONNECTIONCONFIG0URL
+        ConnectionConfigPath0: !Ref COBISRESTRPCCONNECTIONCONFIG0PATH
+        ConnectionConfigTimeout0: !Ref COBISRESTRPCCONNECTIONCONFIG0TIMEOUT
+        ConnectionConfigApikey0: !Ref COBISRESTRPCCONNECTIONCONFIG0APIKEY
+        ConnectionConfigName1: !Ref COBISRESTRPCCONNECTIONCONFIG1NAME
+        ConnectionConfigUrl1: !Ref COBISRESTRPCCONNECTIONCONFIG1URL
+        ConnectionConfigPath1: !Ref COBISRESTRPCCONNECTIONCONFIG1PATH
+        ConnectionConfigTimeout1: !Ref COBISRESTRPCCONNECTIONCONFIG1TIMEOUT
+        ConnectionConfigApikey1: !Ref COBISRESTRPCCONNECTIONCONFIG1APIKEY
+        ConnectionConfigName2: !Ref COBISRESTRPCCONNECTIONCONFIG2NAME
+        ConnectionConfigUrl2: !Ref COBISRESTRPCCONNECTIONCONFIG2URL
+        ConnectionConfigPath2: !Ref COBISRESTRPCCONNECTIONCONFIG2PATH
+        ConnectionConfigTimeout2: !Ref COBISRESTRPCCONNECTIONCONFIG2TIMEOUT
+        ConnectionConfigApikey2: !Ref COBISRESTRPCCONNECTIONCONFIG2APIKEY
+        profile: !Sub 'jobprocessing,${profile}'
+        SECRETMANAGERUSERNAME: !Ref SECRETMANAGERUSERNAME
+        AWSPOOLID: !Ref AWSPOOLID
+        AWSPOOLIDAPP: !Ref AWSPOOLIDAPP
+        AuthenticationPathLogin: !Ref AuthenticationPathLogin
+        AuthenticationPathRole: !Ref AuthenticationPathRole
+        integrationAdminCatalogsBaseUrl: !Ref integrationAdminCatalogsBaseUrl
+        integrationAdminCatalogsPath: !Ref integrationAdminCatalogsPath
+        integrationAdminCatalogsTimeout: !Ref integrationAdminCatalogsTimeout
+        IntegrationDdaBaseUrl: !Ref IntegrationDdaBaseUrl
+        IntegrationDdaTrnBaseUrl: !Ref IntegrationDdaTrnBaseUrl
+        IntegrationDdaApikey: !Ref IntegrationDdaApikey
+        IntegrationDdaTrnApikey: !Ref IntegrationDdaTrnApikey
+        IntegrationBaseLoanURL: !Ref IntegrationBaseLoanURL
+        IntegrationBasePaymentLoanURL: !Ref IntegrationBasePaymentLoanURL
+        IntegrationBaseTransactionalLoanURL: !Ref IntegrationBaseTransactionalLoanURL
+        IntegrationLoanApikey: !Ref IntegrationLoanApikey
+        IntegrationLoanPaymentsApikey: !Ref IntegrationLoanPaymentsApikey
+        IntegrationLoanTransactionalApikey: !Ref IntegrationLoanTransactionalApikey
+        AchSqlTimeout: !Ref AchSqlTimeout
+        BatchMemory: !Ref BatchMemory
+        BatchVcpu: !Ref BatchVcpu
+        IntegrationDdaReadTimeout: !Ref IntegrationDdaReadTimeout
+        IntegrationDdaConnectTimeout: !Ref IntegrationDdaConnectTimeout
+        IntegrationLoanReadTimeout: !Ref IntegrationLoanReadTimeout
+        IntegrationLoanConnectTimeout: !Ref IntegrationLoanConnectTimeout
+      Tags:
+        ORGANIZATION: !Ref Organization
+        PACKAGE: !Ref Package
+        VERSION: !Ref version
+        ENVIRONMENT_TYPE: !Ref EnvironmentType
+        ENVIRONMENT_ID: !Ref EnvironmentId
+        TENANT_ID: !Ref tenantId
+        PROJECT: !Ref Project
+        MODULE: !Ref MODULE
+        PROCESSING_TYPE: "ONLINE"
+
+  TransformInfrastructure:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: template-transform.yaml
+      Parameters:
+        AwsAccountIdToDeploy: !Ref AwsAccountId
+        RegionToDeploy: !Ref AwsRegion
+        SharedResourcesAccount: !Ref AwsAccountId
+        RegionSharedResourcesAccount: !Ref AwsRegion
+        Organization: !Ref Organization
+        Package: !Ref Package
+        Project: !Ref Project
+        EnvironmentId: !Ref EnvironmentId
+        EnvironmentIdBase: !Ref EnvironmentIdBase
+        EnvironmentType: !Ref EnvironmentType
+        TenantId: !Ref tenantId
+        Module: !Ref MODULE
+        ModuleNameInLowerCase: !Ref MODULE
+        Version: !Ref version
+        SubnetIds: !Join
+          - ","
+          - !Ref subnetIDs
+        SecurityGroupIds: !Ref GeneralPurposeSecurityGroupsIds
+        SecretArn: !Ref microserviceSecretArn
+        TimeZone: !Ref timezone
+        LogLevel: !Ref LogLevel
+        LogRetentionDays: !Ref LogRetentionDays
+        ProcessingType: "BATCH"
+        AWSBatchServiceRole: !Ref AWSBatchServiceRole
+        DockerRepository: !Ref dockerEcrRepositoryUrl
+        DockerTag: !Ref dockerTag
+        BatchImportDataBase: !Ref BatchImportDataBase
+        BatchImportTable: !Ref BatchImportTable
+        GlueImportDataBase: !Ref GlueImportDataBase
+        GlueImportTable: !Ref GlueImportTable
+        AchBatchUpdatingLambdaConfiguration: "1024:0:0:0:0:0:INFO"
+        OriginPacs004008: !Ref OriginPacs004008
+        OriginPacs004003: !Ref OriginPacs004003
+        OriginPacs004056: !Ref OriginPacs004056
+        OriginPacs002008: !Ref OriginPacs002008
+        OriginPacs002003: !Ref OriginPacs002003
+        OriginAcmt023: !Ref OriginAcmt023
+        OriginAcmt022008: !Ref OriginAcmt022008
+        LoggingBucket: !Ref LoggingBucket
+        profile: !Sub 'transform,${profile}'
+        SECRETMANAGERUSERNAME: !Ref SECRETMANAGERUSERNAME
+        TransferFamilyUserOut: !Ref TransferFamilyUserOut
+        TransferFamilyUserIn: !Ref TransferFamilyUserIn
+        TransferFamilyServerId: !Ref TransferFamilyServerId
+        TransferFamilyUserPublicKey: !Ref TransferFamilyUserPublicKey
+        BatchMemory: !Ref BatchMemory
+        BatchVcpu: !Ref BatchVcpu
+        LoadBalancerUrl: !Ref LoadBalancerUrl
+        microServicePort: !Ref microServicePort
+        FileProcessingServicePath: !Ref FileProcessingServicePath
+        MicroserviceAuthenticationSecretArn: !Ref AuthenticationSecretArn
+        SecurityGroupACH: !Ref SecurityGroupACH
+      Tags:
+        ORGANIZATION: !Ref Organization
+        PACKAGE: !Ref Package
+        VERSION: !Ref version
+        ENVIRONMENT_TYPE: !Ref EnvironmentType
+        ENVIRONMENT_ID: !Ref EnvironmentId
+        TENANT_ID: !Ref tenantId
+        PROJECT: !Ref Project
+        MODULE: !Ref MODULE
+        PROCESSING_TYPE: "ONLINE"
+
+  BatchProcessingfrastructure:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: template-processingv2.yaml
+      Parameters:
+        Organization: !Ref Organization
+        Package: !Ref Package
+        Version: !Ref version
+        EnvironmentType: !Ref EnvironmentType
+        TenantId: !Ref tenantId
+        Project: !Ref Project
+        ProcessingType: "BATCH"
+        AwsAccountIdToDeploy: !Ref AwsAccountId
+        RegionToDeploy: !Ref AwsRegion
+        EnvironmentId: !Ref EnvironmentId
+        Module: !Ref MODULE
+        ModuleNameInLowerCase: !Ref MODULE
+        SubnetIds: !Join
+          - ","
+          - !Ref subnetIDs
+        SecurityGroupIds: !Ref GeneralPurposeSecurityGroupsIds
+        LoadBalancerUrl: !Ref LoadBalancerUrl
+        microServicePort: !Ref microServicePort
+        BatchProcessingPath: !Ref BatchProcessingPath
+        LambdaProcessingLogLevel: !Ref LambdaProcessingLogLevel
+        LogRetentionDays: !Ref LogRetentionDays
+        MicroserviceAuthenticationSecretArn: !Ref AuthenticationSecretArn
+        SecurityGroupACH: !Ref SecurityGroupACH
+      Tags:
+        ORGANIZATION: !Ref Organization
+        PACKAGE: !Ref Package
+        VERSION: !Ref version
+        ENVIRONMENT_TYPE: !Ref EnvironmentType
+        ENVIRONMENT_ID: !Ref EnvironmentId
+        TENANT_ID: !Ref tenantId
+        PROJECT: !Ref Project
+        MODULE: !Ref MODULE
+        PROCESSING_TYPE: "ONLINE"
+
+  AchServiceDashboard:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: online-compute-dashboard.yaml
+      Parameters:
+        EnvironmentId: !Ref EnvironmentId
+        MODULE: !Ref MODULE
+        RegionToDeploy: !Ref AwsRegion
+        AccountToDeploy: !Ref AwsAccountId
+        TargetGroupName: 
+          Fn::GetAtt: 
+          - ServiceECSInfraestructure
+          - Outputs.microserviceTargetGroup
+        LoadBalancerName: !Select [1, !Split ["loadbalancer/",!Ref publicLoadBalancer]]
+      Tags:
+        ORGANIZATION: !Ref Organization
+        PACKAGE: !Ref Package
+        VERSION: !Ref version
+        ENVIRONMENT_TYPE: !Ref EnvironmentType
+        ENVIRONMENT_ID: !Ref EnvironmentId
+        TENANT_ID: !Ref tenantId
+        PROJECT: !Ref Project
+        MODULE: !Ref MODULE
+        PROCESSING_TYPE: "ONLINE"
+
+  AchCloudWatchQueryInsights:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: template-query-insights.yaml
+      Parameters:
+        EnvironmentId: !Ref EnvironmentId
+        Module: !Ref MODULE
+      Tags:
+        ORGANIZATION: !Ref Organization
+        PACKAGE: !Ref Package
+        VERSION: !Ref version
+        ENVIRONMENT_TYPE: !Ref EnvironmentType
+        ENVIRONMENT_ID: !Ref EnvironmentId
+        TENANT_ID: !Ref tenantId
+        PROJECT: !Ref Project
+        MODULE: !Ref MODULE
+        PROCESSING_TYPE: "ONLINE"
+
+  GlobalDatabase:
+    Condition: IsDrEnable
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: templates/global-database.yaml
+      Parameters:
+        AwsRegion: !Ref AwsRegion
+        EnvironmentId: !Ref EnvironmentId
+        DynamoJobTableBillingMode: !Ref DynamoJobTableBillingMode
+        SuffixGlobalDynamoDbTable: !Ref SuffixGlobalDynamoDbTable
+        AwsDrRegion: !Ref AwsDrRegion
+      Tags:
+        ORGANIZATION: !Ref Organization
+        PACKAGE: !Ref Package
+        VERSION: !Ref version
+        ENVIRONMENT_TYPE: !Ref EnvironmentType
+        ENVIRONMENT_ID: !Ref EnvironmentId
+        TENANT_ID: !Ref tenantId
+        PROJECT: !Ref Project
+        MODULE: !Ref MODULE
+        PROCESSING_TYPE: "ONLINE"

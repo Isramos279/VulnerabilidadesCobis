@@ -1,0 +1,801 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Parameters:
+  Organization:
+    Type: String
+    Description: "Identificador del dueño componente."
+  Package:
+    Type: String
+    Description: "Identificador del paquete de productos comerciales al que se asocia el componente."
+  Version:
+    Type: String
+    Default: "1.0.0"
+    Description: "Versión del módulo o microservicio al que pertenece el componente."
+  EnvironmentType:
+    Type: String
+    AllowedValues: [PRODUCTION, QUALITY, STAGING, DEVELOPMENT]
+    ConstraintDescription: must specify PRODUCTION, STAGING, QUALITY or DEVELOPMENT.
+  EnvironmentId:
+    Type: String
+    Description: "Identificador del ambiente."
+  TenantId:
+    Type: String
+    Description: "Identificador del tenant."
+  Project:
+    Type: String
+    Description: "Identificador del proyecto por el que se crea el componente."
+  Module:
+    Type: String
+    Description: "Nombre del módulo o microservicio."
+  ProcessingType:
+    Type: String
+    Description: "Tipo de procesamiento."
+  subnetIDs:
+    Type: CommaDelimitedList
+  microServiceName:
+    Type: String
+  dockerTag:
+    Type: String
+  dockerEcrRepositoryUrl:
+    Type: String
+  dockerXrayTag:
+    Type: String
+  dockerXrayEcrRepositoryUrl:
+    Type: String
+  clusterECSId:
+    Type: String
+  clusterECSName:
+    Type: String
+  microServicePort:
+    Type: String
+  vpcId:
+    Description: vpcId shared
+    Type: String
+  publicLoadBalancer:
+    Description: LoadBalancer to expose service
+    Type: String
+  healthCheckUrl:
+    Description: Health Check Url
+    Type: String
+  profile:
+    Description: Service profile
+    Type: String
+  timezone:
+    Description: Timezone
+    Type: String
+  createNlb:
+    Description: Si despliega load balancer
+    Type: String
+    Default: false
+  microserviceSecretArn:
+    Description: Timezone
+    Type: String
+  AWSPOOLID:
+    Description: AWS POOL ID Cognito
+    Type: String
+  AWSPOOLIDAPP:
+    Description: AWS POOL APP ID Cognito
+    Type: String
+  COBISRESTRPCCONNECTIONCONFIG0NAME:
+    Description: Name
+    Type: String
+  COBISRESTRPCCONNECTIONCONFIG0URL:
+    Description: Url
+    Type: String
+  COBISRESTRPCCONNECTIONCONFIG0PATH:
+    Description: Path
+    Type: String
+  COBISRESTRPCCONNECTIONCONFIG0TIMEOUT:
+    Description: Timeout
+    Type: String
+  COBISRESTRPCCONNECTIONCONFIG0APIKEY:
+    Description: ApiKey por connection
+    Type: String
+  COBISRESTRPCCONNECTIONCONFIG1NAME:
+    Description: Name
+    Type: String
+  COBISRESTRPCCONNECTIONCONFIG1URL:
+    Description: Url
+    Type: String
+  COBISRESTRPCCONNECTIONCONFIG1PATH:
+    Description: Path
+    Type: String
+  COBISRESTRPCCONNECTIONCONFIG1TIMEOUT:
+    Description: Timeout
+    Type: String
+  COBISRESTRPCCONNECTIONCONFIG1APIKEY:
+    Description: ApiKey por connection
+    Type: String
+  COBISRESTRPCCONNECTIONCONFIG2NAME:
+    Description: Name
+    Type: String
+  COBISRESTRPCCONNECTIONCONFIG2URL:
+    Description: Url
+    Type: String
+  COBISRESTRPCCONNECTIONCONFIG2PATH:
+    Description: Path
+    Type: String
+  COBISRESTRPCCONNECTIONCONFIG2TIMEOUT:
+    Description: Timeout
+    Type: String
+  COBISRESTRPCCONNECTIONCONFIG2APIKEY:
+    Description: ApiKey por connection
+    Type: String
+
+  SECRETMANAGERUSERNAME:
+    Description: SECRET_MANAGER_USERNAME
+    Type: String
+
+  ENVIRONMENTPREFIX:
+    Description: ENVIRONMENT_PREFIX
+    Type: String
+
+  MODULE:
+    Description: MODULE
+    Type: String
+
+  taskDefinitionMemory:
+    Description: Task definition memory
+    Type: Number
+  taskDefinitionCpu:
+    Description: Task definition CPU
+    Type: Number
+  securityGroupsXsellIDs:
+    Type: CommaDelimitedList
+  integrationAdminCatalogsBaseUrl:
+    Description: Url del api de admin generico.
+    Type: String
+  integrationAdminCatalogsPath:
+    Description: Path del api de admin generico.
+    Type: String
+  integrationAdminCatalogsTimeout:
+    Description: Timeout del api de admin generico.
+    Type: String
+  IntegrationDdaBaseUrl:
+    Description: Url del api de negocio de demand deposits generico
+    Type: String
+  IntegrationDdaTrnBaseUrl:
+    Description: Url del api de negocio de demand deposits transaccional
+    Type: String
+  IntegrationDdaApikey:
+    Description: ApiKey del api de negocio de demand deposits
+    Type: String
+  IntegrationDdaTrnApikey:
+    Description: ApiKey del api de negocio de demand deposits transaccional
+    Type: String
+  IntegrationBaseLoanURL:
+    Description: Url del api de negocio de prestamos
+    Type: String
+  IntegrationBasePaymentLoanURL:
+    Description: Url del api de negocio de pagos de prestamos
+    Type: String
+  IntegrationBaseTransactionalLoanURL:
+    Description: Url del api de negocio transaccional de prestamos
+    Type: String
+  IntegrationLoanApikey:
+    Description: ApiKey del api de negocio prestamos
+    Type: String
+  IntegrationLoanPaymentsApikey:
+    Description: ApiKey del api de negocio de pagos de prestamos
+    Type: String
+  IntegrationLoanTransactionalApikey:
+    Description: ApiKey del api de negocio transaccional de prestamos
+    Type: String
+  IntegrationTDepositsBaseURL:
+    Description: Url del api de negocio de timedeposits
+    Type: String 
+  IntegrationTDepositsApikey:
+    Description: ApiKey del api de negocio de timedeposits
+    Type: String
+  IntegrationDdaReadTimeout:
+    Description: Integration Demand Deposits Read Timeout
+    Type: Number
+  IntegrationDdaConnectTimeout:
+    Description: Integration Demand Connect Timeout
+    Type: Number
+  IntegrationLoanReadTimeout:
+    Description: Integration Loans Read Timeout
+    Type: Number
+  IntegrationLoanConnectTimeout:
+    Description: Integration Loans Connect Timeout
+    Type: Number
+  IntegrationPconsolidatorBaseURL:
+    Description: Integration TimeDeposits BaseURL
+    Type: String
+  IntegrationPconsolidatorApikey:
+    Description: Integration TimeDeposits ApiKey
+    Type: String  
+  AchSqlTimeout:
+    Description: Timeout para query de ordenes
+    Type: String
+  HealthCheckIntervalSeconds:
+    Description: Health check interval in seconds
+    Type: Number
+  UnhealthyThresholdCount:
+    Description: Unhealthy threshold count
+    Type: Number
+  ServiceScalingMaxCapacity:
+    Description: Número máximo de instancias
+    Type: Number
+  ServiceScalingMinCapacity:
+    Description: Número mínimo de instancias
+    Type: Number
+  SecurityGroupsXsellCidrIp:
+    Description: Red que se va a abrir en la entrada en el grupo de seguridad de xsell
+    Type: String
+  CWCSecurityGroupId:
+    Description: Security group id asociado al cwc usado para abrir un puerto de salida
+    Type: String
+  LogRetentionDays:
+    Type: Number
+    Description: "Indica el número de días de retención de logs."
+
+Resources:
+  TaskIamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      AssumeRolePolicyDocument: |
+        {
+          "Statement": [{
+            "Effect": "Allow",
+            "Principal": { "Service": [ "ecs-tasks.amazonaws.com" ]},
+            "Action": [ "sts:AssumeRole" ]
+          }]
+        }
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/CloudWatchFullAccess
+        - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
+        - arn:aws:iam::aws:policy/AWSAppMeshEnvoyAccess
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+        - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+        - arn:aws:iam::aws:policy/SecretsManagerReadWrite
+        - arn:aws:iam::aws:policy/AmazonEventBridgeFullAccess
+      Tags:
+        - Key: "ORGANIZATION"
+          Value: !Ref Organization
+        - Key: "PACKAGE"
+          Value: !Ref Package
+        - Key: "VERSION"
+          Value: !Ref Version
+        - Key: "ENVIRONMENT_TYPE"
+          Value: !Ref EnvironmentType
+        - Key: "ENVIRONMENT_ID"
+          Value: !Ref EnvironmentId
+        - Key: "TENANT_ID"
+          Value: !Ref TenantId
+        - Key: "PROJECT"
+          Value: !Ref Project
+        - Key: "MODULE"
+          Value: !Ref Module
+        - Key: "PROCESSING_TYPE"
+          Value: "BATCH"        
+
+  TaskExecutionIamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      AssumeRolePolicyDocument: |
+        {
+          "Statement": [{
+            "Effect": "Allow",
+            "Principal": { "Service": [ "ecs-tasks.amazonaws.com" ]},
+            "Action": [ "sts:AssumeRole" ]
+          }]
+        }
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+        - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+        - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+        - arn:aws:iam::aws:policy/SecretsManagerReadWrite
+        - arn:aws:iam::aws:policy/AmazonEventBridgeFullAccess        
+      Tags:
+        - Key: "ORGANIZATION"
+          Value: !Ref Organization
+        - Key: "PACKAGE"
+          Value: !Ref Package
+        - Key: "VERSION"
+          Value: !Ref Version
+        - Key: "ENVIRONMENT_TYPE"
+          Value: !Ref EnvironmentType
+        - Key: "ENVIRONMENT_ID"
+          Value: !Ref EnvironmentId
+        - Key: "TENANT_ID"
+          Value: !Ref TenantId
+        - Key: "PROJECT"
+          Value: !Ref Project
+        - Key: "MODULE"
+          Value: !Ref Module
+        - Key: "PROCESSING_TYPE"
+          Value: "BATCH"  
+  
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "${ENVIRONMENTPREFIX}-${microServiceName}-log-group"
+      RetentionInDays: !Ref LogRetentionDays
+      Tags:
+        - Key: "ORGANIZATION"
+          Value: !Ref Organization
+        - Key: "PACKAGE"
+          Value: !Ref Package
+        - Key: "VERSION"
+          Value: !Ref Version
+        - Key: "ENVIRONMENT_TYPE"
+          Value: !Ref EnvironmentType
+        - Key: "ENVIRONMENT_ID"
+          Value: !Ref EnvironmentId
+        - Key: "TENANT_ID"
+          Value: !Ref TenantId
+        - Key: "PROJECT"
+          Value: !Ref Project
+        - Key: "MODULE"
+          Value: !Ref Module
+        - Key: "PROCESSING_TYPE"
+          Value: "BATCH"
+  LogGroupXray:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "${ENVIRONMENTPREFIX}-${microServiceName}-xray-log-group"
+      RetentionInDays: !Ref LogRetentionDays
+      Tags:
+        - Key: "ORGANIZATION"
+          Value: !Ref Organization
+        - Key: "PACKAGE"
+          Value: !Ref Package
+        - Key: "VERSION"
+          Value: !Ref Version
+        - Key: "ENVIRONMENT_TYPE"
+          Value: !Ref EnvironmentType
+        - Key: "ENVIRONMENT_ID"
+          Value: !Ref EnvironmentId
+        - Key: "TENANT_ID"
+          Value: !Ref TenantId
+        - Key: "PROJECT"
+          Value: !Ref Project
+        - Key: "MODULE"
+          Value: !Ref Module
+        - Key: "PROCESSING_TYPE"
+          Value: "BATCH"
+
+  WebTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: !Ref HealthCheckIntervalSeconds
+      HealthCheckPath: !Ref healthCheckUrl
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 5
+      TargetType: ip
+      Name: !Sub "${ENVIRONMENTPREFIX}-${microServiceName}-wt"
+      Port: !Ref microServicePort
+      Protocol: HTTP
+      UnhealthyThresholdCount: !Ref UnhealthyThresholdCount
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 17
+      VpcId: !Ref vpcId
+      Tags:
+        - Key: "ORGANIZATION"
+          Value: !Ref Organization
+        - Key: "PACKAGE"
+          Value: !Ref Package
+        - Key: "VERSION"
+          Value: !Ref Version
+        - Key: "ENVIRONMENT_TYPE"
+          Value: !Ref EnvironmentType
+        - Key: "ENVIRONMENT_ID"
+          Value: !Ref EnvironmentId
+        - Key: "TENANT_ID"
+          Value: !Ref TenantId
+        - Key: "PROJECT"
+          Value: !Ref Project
+        - Key: "MODULE"
+          Value: !Ref Module
+        - Key: "PROCESSING_TYPE"
+          Value: "BATCH"
+  
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub ${ENVIRONMENTPREFIX}-${microServiceName}-task
+      Cpu: !Ref taskDefinitionCpu
+      Memory: !Ref taskDefinitionMemory
+      TaskRoleArn: !Ref TaskIamRole
+      ExecutionRoleArn: !Ref TaskExecutionIamRole
+      NetworkMode: awsvpc
+      ContainerDefinitions:
+        - Name: !Sub ${ENVIRONMENTPREFIX}-xray-container
+          Image: !Sub ${dockerXrayEcrRepositoryUrl}:${dockerXrayTag}
+          LogConfiguration:
+            LogDriver: "awslogs"
+            Options:
+              awslogs-group: !Sub "${ENVIRONMENTPREFIX}-${microServiceName}-xray-log-group"
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: !Sub "${ENVIRONMENTPREFIX}-${microServiceName}-xray-microservice"      
+        - Name: !Sub ${ENVIRONMENTPREFIX}-${microServiceName}-container
+          Image: !Sub ${dockerEcrRepositoryUrl}:${dockerTag}
+          ReadonlyRootFilesystem: false
+          Secrets:
+            - Name: APP_DATASOURCE_MASTER_DATABASE
+              ValueFrom: !Sub "${microserviceSecretArn}:database::"
+            - Name: APP_DATASOURCE_MASTER_ENDPOINT
+              ValueFrom: !Sub "${microserviceSecretArn}:masterEndpoint::"
+            - Name: APP_DATASOURCE_MASTER_REPLICA_ENDPOINT
+              ValueFrom: !Sub "${microserviceSecretArn}:readReplicaEndpoint::"
+            - Name: APP_DATASOURCE_MASTER_PORT
+              ValueFrom: !Sub "${microserviceSecretArn}:masterPort::"
+            - Name: APP_DATASOURCE_MASTER_REPLICA_PORT
+              ValueFrom: !Sub "${microserviceSecretArn}:readReplicaPort::"
+            - Name: APP_DATASOURCE_MASTER_ARGUMENTS
+              ValueFrom: !Sub "${microserviceSecretArn}:arguments::"
+          Environment:
+            - Name: RESOURCE_NAME
+              Value: !Sub ${microServiceName}
+            - Name: MODULE
+              Value: !Ref microServiceName
+            - Name: ENVIRONMENT_PREFIX
+              Value: !Ref ENVIRONMENTPREFIX
+            - Name: SPRING_DATASOURCE_USERNAME
+              Value: !Ref SECRETMANAGERUSERNAME
+            - Name: spring.profiles.active
+              Value: !Ref profile
+            - Name: PROFILE
+              Value: !Ref profile
+            - Name: SPRING_JACKSON_TIMEZONE
+              Value: !Ref timezone
+            - Name: TZ
+              Value: !Ref timezone
+            - Name: AWS_REGION
+              Value: !Ref AWS::Region
+            - Name: AWS_POOLID
+              Value: !Ref AWSPOOLID
+            - Name: AWS_POOLIDAPP
+              Value: !Ref AWSPOOLIDAPP
+            - Name: COBIS_RESTRPC_CONNECTIONCONFIG_0_NAME
+              Value: !Ref COBISRESTRPCCONNECTIONCONFIG0NAME
+            - Name: COBIS_RESTRPC_CONNECTIONCONFIG_0_URL
+              Value: !Ref COBISRESTRPCCONNECTIONCONFIG0URL
+            - Name: COBIS_RESTRPC_CONNECTIONCONFIG_0_PATH
+              Value: !Ref COBISRESTRPCCONNECTIONCONFIG0PATH
+            - Name: COBIS_RESTRPC_CONNECTIONCONFIG_0_TIMEOUT
+              Value: !Ref COBISRESTRPCCONNECTIONCONFIG0TIMEOUT
+            - Name: COBIS_RESTRPC_CONNECTIONCONFIG_0_APIKEY
+              Value: !Ref COBISRESTRPCCONNECTIONCONFIG0APIKEY
+            - Name: COBIS_RESTRPC_CONNECTIONCONFIG_1_NAME
+              Value: !Ref COBISRESTRPCCONNECTIONCONFIG1NAME
+            - Name: COBIS_RESTRPC_CONNECTIONCONFIG_1_URL
+              Value: !Ref COBISRESTRPCCONNECTIONCONFIG1URL
+            - Name: COBIS_RESTRPC_CONNECTIONCONFIG_1_PATH
+              Value: !Ref COBISRESTRPCCONNECTIONCONFIG1PATH
+            - Name: COBIS_RESTRPC_CONNECTIONCONFIG_1_TIMEOUT
+              Value: !Ref COBISRESTRPCCONNECTIONCONFIG1TIMEOUT
+            - Name: COBIS_RESTRPC_CONNECTIONCONFIG_1_APIKEY
+              Value: !Ref COBISRESTRPCCONNECTIONCONFIG1APIKEY
+            - Name: COBIS_RESTRPC_CONNECTIONCONFIG_2_NAME
+              Value: !Ref COBISRESTRPCCONNECTIONCONFIG2NAME
+            - Name: COBIS_RESTRPC_CONNECTIONCONFIG_2_URL
+              Value: !Ref COBISRESTRPCCONNECTIONCONFIG2URL
+            - Name: COBIS_RESTRPC_CONNECTIONCONFIG_2_PATH
+              Value: !Ref COBISRESTRPCCONNECTIONCONFIG2PATH
+            - Name: COBIS_RESTRPC_CONNECTIONCONFIG_2_TIMEOUT
+              Value: !Ref COBISRESTRPCCONNECTIONCONFIG2TIMEOUT
+            - Name: COBIS_RESTRPC_CONNECTIONCONFIG_2_APIKEY
+              Value: !Ref COBISRESTRPCCONNECTIONCONFIG2APIKEY
+            - Name: INTEGRATION_ADMINCATALOGS_BASEURL
+              Value: !Ref integrationAdminCatalogsBaseUrl
+            - Name: INTEGRATION_ADMINCATALOGS_PATH
+              Value: !Ref integrationAdminCatalogsPath
+            - Name: INTEGRATION_ADMINCATALOGS_TIMEOUT
+              Value: !Ref integrationAdminCatalogsTimeout
+            - Name: INTEGRATION_DDA_BASEURL
+              Value: !Ref IntegrationDdaBaseUrl
+            - Name: INTEGRATION_DDATRANSACTIONAL_BASEURL
+              Value: !Ref IntegrationDdaTrnBaseUrl
+            - Name: INTEGRATION_DDA_APIKEY
+              Value: !Ref IntegrationDdaApikey
+            - Name: INTEGRATION_DDATRANSACTIONAL_APIKEY
+              Value: !Ref IntegrationDdaTrnApikey
+            - Name: INTEGRATION_LOANS_BASEURL
+              Value: !Ref IntegrationBaseLoanURL
+            - Name: INTEGRATION_LOANSPAYMENTS_BASEURL
+              Value: !Ref IntegrationBasePaymentLoanURL
+            - Name: INTEGRATION_LOANSTRANSACTIONAL_BASEURL
+              Value: !Ref IntegrationBaseTransactionalLoanURL
+            - Name: INTEGRATION_LOANS_APIKEY
+              Value: !Ref IntegrationLoanApikey
+            - Name: INTEGRATION_LOANSPAYMENTS_APIKEY
+              Value: !Ref IntegrationLoanPaymentsApikey
+            - Name: INTEGRATION_LOANSTRANSACTIONAL_APIKEY
+              Value: !Ref IntegrationLoanTransactionalApikey
+            - Name: INTEGRATION_TDEPOSITS_BASEURL
+              Value: !Ref IntegrationTDepositsBaseURL
+            - Name: INTEGRATION_TDEPOSITS_APIKEY
+              Value: !Ref IntegrationTDepositsApikey
+            - Name: INTEGRATION_DISBURSEMENTLOANS_BASEURL
+              Value: "http://localhost:8800/"
+            - Name: INTEGRATION_DISBURSEMENTLOANS_APIKEY
+              Value: "apikey1"
+            - Name: INTEGRATION_DDA_READTIMEOUT
+              Value: !Ref IntegrationDdaReadTimeout
+            - Name: INTEGRATION_DDA_CONNECTTIMEOUT
+              Value: !Ref IntegrationDdaConnectTimeout
+            - Name: INTEGRATION_LOAN_READTIMEOUT
+              Value: !Ref IntegrationLoanReadTimeout
+            - Name: INTEGRATION_LOAN_CONNECTTIMEOUT
+              Value: !Ref IntegrationLoanConnectTimeout
+            - Name: INTEGRATION_PCONSOLIDATOR_BASEURL
+              Value: !Ref IntegrationPconsolidatorBaseURL
+            - Name: INTEGRATION_PCONSOLIDATOR_APIKEY
+              Value: !Ref IntegrationPconsolidatorApikey
+            - Name: ACH_SQLTIMEOUT
+              Value: !Ref AchSqlTimeout
+            - Name: SECRET_VALUE
+              Value: !Ref microserviceSecretArn
+            - Name: remote.xml.path
+              Value: config/app/XML/
+            - Name: remote.bcp.path
+              Value: config/app/BCP/
+            - Name: BUCKET_INPUT
+              Value: !Sub "${EnvironmentId}-${Module}-${TenantId}-batch-inputfiledirectory-${AWS::AccountId}"
+            - Name: BUCKET_OUTPUT
+              Value: !Sub "${EnvironmentId}-${Module}-${TenantId}-batch-outputfiledirectory-${AWS::AccountId}"
+
+          Ulimits:
+            - Name: "nofile"
+              HardLimit: 30000
+              SoftLimit: 30000          
+          HealthCheck:
+            Command:
+              - "CMD-SHELL"
+              - !Sub "curl -f http://localhost:${microServicePort}${healthCheckUrl} || exit 1"
+            Interval: 60
+            Timeout: 3
+            Retries: 4
+            StartPeriod: 100
+          LogConfiguration:
+            LogDriver: "awslogs"
+            Options:
+              awslogs-group: !Sub "${ENVIRONMENTPREFIX}-${microServiceName}-log-group"
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: !Sub "${ENVIRONMENTPREFIX}-${microServiceName}-microservice"
+          PortMappings:
+            - ContainerPort: !Ref microServicePort
+      RequiresCompatibilities:
+        - FARGATE
+      Tags:
+        - Key: "ORGANIZATION"
+          Value: !Ref Organization
+        - Key: "PACKAGE"
+          Value: !Ref Package
+        - Key: "VERSION"
+          Value: !Ref Version
+        - Key: "ENVIRONMENT_TYPE"
+          Value: !Ref EnvironmentType
+        - Key: "ENVIRONMENT_ID"
+          Value: !Ref EnvironmentId
+        - Key: "TENANT_ID"
+          Value: !Ref TenantId
+        - Key: "PROJECT"
+          Value: !Ref Project
+        - Key: "MODULE"
+          Value: !Ref Module
+        - Key: "PROCESSING_TYPE"
+          Value: "BATCH"
+
+  XsellSecurityGroupIngress:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Properties:
+      GroupId: !Select [ 0, !Ref securityGroupsXsellIDs ]
+      IpProtocol: tcp
+      FromPort: !Ref microServicePort
+      ToPort: !Ref microServicePort
+      CidrIp: !Ref SecurityGroupsXsellCidrIp
+
+  CWCSecurityGroupEgressAch:
+    Type: 'AWS::EC2::SecurityGroupEgress'
+    Properties:
+      Description: Salida hacia los servicios de ach
+      GroupId: !Ref CWCSecurityGroupId
+      IpProtocol: tcp
+      FromPort: !Ref microServicePort
+      ToPort: !Ref microServicePort
+      DestinationSecurityGroupId: !Select [ 0, !Ref securityGroupsXsellIDs ]
+
+  Service:
+    Type: AWS::ECS::Service
+    Properties:
+      ServiceName: !Sub ${ENVIRONMENTPREFIX}-${microServiceName}
+      Cluster: !Ref clusterECSId
+      TaskDefinition: !Ref TaskDefinition
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          Subnets: !Ref subnetIDs
+          SecurityGroups: !Ref securityGroupsXsellIDs
+      LoadBalancers:
+        - ContainerName: !Sub ${ENVIRONMENTPREFIX}-${microServiceName}-container
+          ContainerPort: !Ref microServicePort
+          TargetGroupArn: !Ref WebTargetGroup
+      Tags:
+        - Key: "ORGANIZATION"
+          Value: !Ref Organization
+        - Key: "PACKAGE"
+          Value: !Ref Package
+        - Key: "VERSION"
+          Value: !Ref Version
+        - Key: "ENVIRONMENT_TYPE"
+          Value: !Ref EnvironmentType
+        - Key: "ENVIRONMENT_ID"
+          Value: !Ref EnvironmentId
+        - Key: "TENANT_ID"
+          Value: !Ref TenantId
+        - Key: "PROJECT"
+          Value: !Ref Project
+        - Key: "MODULE"
+          Value: !Ref Module
+        - Key: "PROCESSING_TYPE"
+          Value: "BATCH"
+
+  AutoscalingRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: [application-autoscaling.amazonaws.com]
+          Action: ['sts:AssumeRole']
+      Path: /
+      Policies:
+      - PolicyName: service-autoscaling
+        PolicyDocument:
+          Statement:
+          - Effect: Allow
+            Action: [
+              'application-autoscaling:DeleteScalingPolicy',
+              'application-autoscaling:DeleteScheduledAction',
+              'application-autoscaling:DeregisterScalableTarget',
+              'application-autoscaling:DescribeScalableTargets',
+              'application-autoscaling:DescribeScalingActivities',
+              'application-autoscaling:DescribeScalingPolicies',
+              'application-autoscaling:DescribeScheduledActions',
+              'application-autoscaling:PutScalingPolicy',
+              'application-autoscaling:PutScheduledAction',
+              'application-autoscaling:RegisterScalableTarget',
+              'cloudwatch:DescribeAlarms',
+              'cloudwatch:PutMetricAlarm',
+              'ecs:DescribeServices',
+              'ecs:UpdateService',
+              'cloudwatch:DeleteAlarms']
+            Resource: !Join
+              - ""
+              - - "arn:aws:ecs:us-east-1:"
+                - !Sub "${AWS::AccountId}:"
+                - "cluster/"
+                - !Ref clusterECSName            
+      Tags:
+        - Key: "ORGANIZATION"
+          Value: !Ref Organization
+        - Key: "PACKAGE"
+          Value: !Ref Package
+        - Key: "VERSION"
+          Value: !Ref Version
+        - Key: "ENVIRONMENT_TYPE"
+          Value: !Ref EnvironmentType
+        - Key: "ENVIRONMENT_ID"
+          Value: !Ref EnvironmentId
+        - Key: "TENANT_ID"
+          Value: !Ref TenantId
+        - Key: "PROJECT"
+          Value: !Ref Project
+        - Key: "MODULE"
+          Value: !Ref Module
+        - Key: "PROCESSING_TYPE"
+          Value: "BATCH"
+
+  ServiceScalingTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    DependsOn: Service
+    Properties:
+      MaxCapacity: !Ref ServiceScalingMaxCapacity
+      MinCapacity: !Ref ServiceScalingMinCapacity
+      ResourceId: !Join ['', [service/, !Ref clusterECSName, /, !GetAtt [Service, Name]]]
+      RoleARN: !GetAtt [AutoscalingRole, Arn]
+      ScalableDimension: 'ecs:service:DesiredCount'
+      ServiceNamespace: ecs
+
+  ServiceScalingPolicyIncrease:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: !Sub ${ENVIRONMENTPREFIX}-${microServiceName}-step-policy-increase
+      PolicyType: StepScaling
+      ScalingTargetId: !Ref ServiceScalingTarget
+      StepScalingPolicyConfiguration:
+        AdjustmentType: ChangeInCapacity
+        Cooldown: 30
+        MetricAggregationType: Average
+        StepAdjustments:
+        - MetricIntervalLowerBound: 0
+          ScalingAdjustment: 2
+
+  ServiceScalingPolicyReduce:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: !Sub ${ENVIRONMENTPREFIX}-${microServiceName}-step-policy-reduce
+      PolicyType: StepScaling
+      ScalingTargetId: !Ref ServiceScalingTarget
+      StepScalingPolicyConfiguration:
+        AdjustmentType: ChangeInCapacity
+        Cooldown: 60
+        MetricAggregationType: Average
+        StepAdjustments:
+        - MetricIntervalUpperBound: 0
+          ScalingAdjustment: -1
+
+  alarmToScale:
+    Type: "AWS::CloudWatch::Alarm"
+    Properties:
+      AlarmName: !Sub ${ENVIRONMENTPREFIX}-${microServiceName}-scale-alarm
+      AlarmDescription: "Trigger alarmToScale"
+      Namespace: "AWS/ECS"
+      MetricName: "CPUUtilization"
+      ComparisonOperator: "GreaterThanThreshold"
+      Dimensions:
+        - Name: "ClusterName"
+          Value: !Sub ${clusterECSName}
+        - Name: "ServiceName"
+          Value: !Sub ${ENVIRONMENTPREFIX}-${microServiceName}
+      EvaluationPeriods: 1
+      Period: 60
+      Unit: 'Percent'
+      Statistic: 'Average'
+      Threshold: 75
+      AlarmActions:
+        - !Ref ServiceScalingPolicyIncrease
+
+  alarmToReduce:
+    Type: "AWS::CloudWatch::Alarm"
+    Properties:
+      AlarmName: !Sub ${ENVIRONMENTPREFIX}-${microServiceName}-reduce-alarm
+      AlarmDescription: "Trigger alarmToReduce"
+      Namespace: "AWS/ECS"
+      MetricName: "CPUUtilization"
+      ComparisonOperator: "LessThanOrEqualToThreshold"
+      Dimensions:
+        - Name: "ClusterName"
+          Value: !Sub ${clusterECSName}
+        - Name: "ServiceName"
+          Value: !Sub ${ENVIRONMENTPREFIX}-${microServiceName}
+      EvaluationPeriods: 1
+      Period: 60
+      Unit: 'Percent'
+      Statistic: 'Average'
+      Threshold: 15
+      AlarmActions:
+        - !Ref ServiceScalingPolicyReduce
+
+  PublicLoadBalancerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - TargetGroupArn: !Ref WebTargetGroup
+          Type: "forward"
+      LoadBalancerArn: !Ref publicLoadBalancer
+      Port: !Ref microServicePort
+      Protocol: HTTP
+
+Outputs:
+  PrivateLoadBalancerArn:
+    Description: Private Load Balancer Arn
+    Value: !Ref publicLoadBalancer 
+    Export:
+      Name: !Sub ${AWS::StackName}-PrivateLoadBalancerArn
+  microserviceTargetGroup:
+    Description: Microservice Target Group
+    Value: !GetAtt WebTargetGroup.TargetGroupFullName
+    Export:
+      Name: !Sub ${AWS::StackName}-microserviceTargetGroup
