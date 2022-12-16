@@ -1,0 +1,300 @@
+{
+    "%meshTable%": [
+        {
+            "PutRequest": {
+                "Item": {
+                    "configuration": {
+                        "L": [
+                            {
+                                "M": {
+                                    "jobId": {
+                                        "S": "16201"
+                                    },
+                                    "parameters": {
+                                        "M": {
+                                            "requestObject": {
+                                                "S": "{\"fechaProceso\":\"${PROCESS_DATE}\"}"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                "M": {
+                                    "jobId": {
+                                        "S": "16202"
+                                    },
+                                    "parameters": {
+                                        "M": {
+                                            "requestObject": {
+                                                "S": "{\"fechaProceso\":\"${PROCESS_DATE}\"}"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                "M": {
+                                    "jobId": {
+                                        "S": "16203"
+                                    },
+                                    "parameters": {
+                                        "M": {
+                                            "requestObject": {
+                                                "S": "{\"fechaProceso\":\"${PROCESS_DATE}\"}"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                "M": {
+                                    "jobId": {
+                                        "S": "16204"
+                                    },
+                                    "parameters": {
+                                        "M": {
+                                            "requestObject": {
+                                                "S": "{\"fechaProceso\":\"${PROCESS_DATE}\"}"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    "meshId": {
+                        "S": "16200"
+                    },
+                    "meshName": {
+                        "S": "Paso a históricos tablas de ATM"
+                    },
+                    "moduleId": {
+                        "S": "16"
+                    },
+                    "moduleName": {
+                        "S": "atm"
+                    },
+                    "reprocessing": {
+                        "BOOL": true
+                    }
+                }
+            }
+        },
+		{
+            "PutRequest": {
+                "Item": {
+                    "configuration": {
+                        "L": [
+                            {
+                                "M": {
+                                    "jobId": {
+                                        "S": "16301"
+                                    },
+                                    "parameters": {
+                                        "M": {
+                                            "requestObject": {
+                                                "S": "{\"fechaProceso\":\"${PROCESS_DATE}\"}"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                "M": {
+                                    "jobId": {
+                                        "S": "16302"
+                                    },
+                                    "parameters": {
+                                        "M": {
+                                            "requestObject": {
+                                                "S": "{\"operacion\":\"S\",\"fechaInicio\":\"${PROCESS_DATE}\",\"fechaFin\":\"${PROCESS_DATE}\"}"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    "meshId": {
+                        "S": "16300"
+                    },
+                    "meshName": {
+                        "S": "Sarta_de_Procesos_Mensuales"
+                    },
+                    "moduleId": {
+                        "S": "16"
+                    },
+                    "moduleName": {
+                        "S": "atm"
+                    },
+                    "reprocessing": {
+                        "BOOL": true
+                    }
+                }
+            }
+        },
+        {
+            "PutRequest": {
+                "Item": {
+                    "configuration": {
+                        "L": [
+                            {
+                                "M": {
+                                    "jobId": {
+                                        "S": "16401"
+                                    },
+                                    "parameters": {
+                                        "M": {
+                                            "requestObject": {
+                                                "S": "{\"operacion\":\"S\",\"fechaInicio\":\"${PROCESS_DATE}\",\"fechaFin\":\"${PROCESS_DATE}\"}"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                "M": {
+                                    "jobId": {
+                                        "S": "16403"
+                                    },
+                                    "parameters": {
+                                        "M": {
+                                            "requestObject": {
+                                                "S": "{\"fechaProceso\":\"${PROCESS_DATE}\"}"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                "M": {
+                                    "jobId": {
+                                        "S": "16404"
+                                    },
+                                    "parameters": {
+                                        "M": {
+                                            "requestObject": {
+                                                "S": "{\"fechaProceso\":\"${PROCESS_DATE}\"}"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                "M": {
+                                    "jobId": {
+                                        "S": "16405"
+                                    },
+                                    "parameters": {
+                                        "M": {
+                                            "requestObject": {
+                                                "S": "{\"fechaProceso\":\"${PROCESS_DATE}\"}"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                "M": {
+                                    "jobId": {
+                                        "S": "16406"
+                                    },
+                                    "parameters": {
+                                        "M": {
+                                            "requestObject": {
+                                                "S": "{}"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                "M": {
+                                    "jobId": {
+                                        "S": "16407"
+                                    },
+                                    "parameters": {
+                                        "M": {
+                                            "requestObject": {
+                                                "S": "{\"iProducto\":\"3\"}"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                "M": {
+                                    "jobId": {
+                                        "S": "16408"
+                                    },
+                                    "parameters": {
+                                        "M": {
+                                            "requestObject": {
+                                                "S": "{\"fechaProceso\":\"${PROCESS_DATE}\"}"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    "meshId": {
+                        "S": "16400"
+                    },
+                    "meshName": {
+                        "S": "Sarta_Procesos_Diarios"
+                    },
+                    "moduleId": {
+                        "S": "16"
+                    },
+                    "moduleName": {
+                        "S": "atm"
+                    },
+                    "reprocessing": {
+                        "BOOL": true
+                    }
+                }
+            }
+        },
+        {
+            "PutRequest": {
+                "Item": {
+                    "configuration": {
+                        "L": [
+                            {
+                                "M": {
+                                    "jobId": {
+                                        "S": "16402"
+                                    },
+                                    "parameters": {
+                                        "M": {
+                                            "requestObject": {
+                                                "S": "{}"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    "meshId": {
+                        "S": "16450"
+                    },
+                    "meshName": {
+                        "S": "Pagos de Comercio Carga Concepto"
+                    },
+                    "moduleId": {
+                        "S": "16"
+                    },
+                    "moduleName": {
+                        "S": "atm"
+                    },
+                    "reprocessing": {
+                        "BOOL": true
+                    }
+                }
+            }
+        }
+    ]
+}

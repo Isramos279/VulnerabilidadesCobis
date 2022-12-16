@@ -1,0 +1,29 @@
+{
+  "header": {
+    "aws_request_id": "fc0cee0d-561f-46f1-9807-e9a86ab1c459",
+    "x_authorization": "Bearer eyJraWQiOiJ5TnFyKzhVeG8zWDA5ZXNnZWRkQnA4RE5EWlZOaVNIKzE1Q2Y2MXlJcWRVPSIsImFsZyI6IlJTMjU2In0.eyJicmFuY2hJZCI6IjEiLCJzdWIiOiIxNGNmNDYxZC1mMjhlLTQ1ZWEtYTU1Ni1hZmQxNDNjMjlmNGMiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsImlzcyI6Imh0dHBzOlwvXC9jb2duaXRvLWlkcC51cy1lYXN0LTIuYW1hem9uYXdzLmNvbVwvdXMtZWFzdC0yX0NkY1gzTk5WMiIsImNvZ25pdG86dXNlcm5hbWUiOiJhZG11c2VyIiwidGVybWluYWwiOiJkZW1vIiwicm9sIjoiMSIsImF1ZCI6IjNxMTdsamdwdnBjYnY1N3I5b2M0ZmtjdTQ1IiwiZXZlbnRfaWQiOiIwMWRlNDgxNC04MWMzLTQyMmItYjBjNS03YjljMmQ4MjBlNDUiLCJ0b2tlbl91c2UiOiJpZCIsImF1dGhfdGltZSI6MTYxNjcxMTU2OCwibmFtZSI6IkZFUk5BTkRPIEFCQUQiLCJleHAiOjE2MTY3MTUxNjgsImlhdCI6MTYxNjcxMTU2OCwiZW1haWwiOiJmcm9kcmlndWV6QGNvYmlzY29ycC5jb20ifQ.hreFvuWbZp1INMPJg1jpHjZ83ichUARJTSHC7eFE53nL33k9hNaMrTeCJEjhqJx3niXSJ75PTpyCsOqGqDmTy8HIvDOzYCCxv6Ug2PbE31U1aYi4WFyoSNRWgXYr1EWdvB5_z9ZXxCIXANnRh3Mcik2EnqRMn9y1K_0UW7E9ETW2nrf8FNNXWdt0183Vi9v7Xh_8XMT3mrlP0AjJomjE_GX5DUCJC8LqMe6iq_OAL6UzlFxs-r_5Jb7yySO4YZps5f5Dveh-GzmAkH4S965I2YcJMD1Xef2ESLb6836iBHMrFHjKgfYlBIbyCQa0hN59IFguttwh8zLnsVD17GoPiA",
+    "x_request_id": "c302e20a-2123-4131-b0d0-8853c84d9f9c",
+    "x_end_user_login": "userdemo",
+    "x_financial_id": "1",
+    "x_end_user_request_date_time": "2019-10-11T23:00:27Z",
+    "x_end_user_last_logged_date_time": "2019-10-11T23:00:20Z",
+    "x_end_user_terminal": "terminal",
+    "x_reverse": "false",
+    "x_requestId_to_reverse": "",
+    "x_channel": "",
+    "accept_Language": "ES-EC"
+  },
+  "body" : {},
+  "getbody": {
+    "queries":{
+      "endDate": "2020-12-01",            "initDate": "2018-01-01",            "offset": "0",            "pageSize": "10"          },
+    "params": {
+      "accountId": "25"          }
+  },
+  "service": {
+    "apiId": "5nzh03oxu3",
+    "operationId": "accountsMovementsGETById",
+    "catalogCode": "AS0061",
+    "successfulStatusCode": "200"
+  }
+}

@@ -1,0 +1,1535 @@
+openapi: 3.0.0
+
+info:
+  description: 'This is the domain for definitions of COBIS ADMIN module. This include, users, references, catalogs, etc.'
+  version: '1.1.0'
+  title: 'COBIS Admin Domain'
+
+components:
+  ####################################################################
+  # Reusable schemas (data models)
+  ####################################################################
+  schemas:
+    # OBJECTS
+    File:
+      description: 'Entidad para el manejo de archivos.'
+      properties:
+        name:
+          description: 'Nombre del archivo.'
+          type: string
+        extension:
+          description: 'Extensión del archivo.'
+          type: string
+        data:
+          description: 'Contenido del archivo en base 64.'
+          type: string
+          format: byte
+    Account: #table virtual object
+      description: 'Cuenta Bancaria con la definición de las distintas naturalezas.'
+      properties:
+        code: #field:ah_cuenta
+          $ref: '#/components/schemas/AccountCode'
+        number: #field:ah_cta_banco
+          $ref: '#/components/schemas/AccountNumber'
+        status: #field:ah_estado
+          $ref: '#/components/schemas/AccountStatus'
+        passbook: #field
+          $ref: '#/components/schemas/Passbook'
+        subsidiary: #field virtual
+          $ref: '#/components/schemas/Subsidiary'
+        branch: #field virtual
+          $ref: '#/components/schemas/Branch'
+        product: #ah_producto
+          $ref: '#/components/schemas/ProductType'
+        currency: #field virtual
+          $ref: '#/components/schemas/Currency'
+        originationDate: #field virtual
+          description: 'Fecha de apertura de la cuenta.'
+          type: string
+          format: date
+        officer: #field:ah_oficial
+          $ref: '#/components/schemas/Officer'
+        customer: #field virtual
+          $ref: 'COBISCustomersDomain-v2-3-0.yaml#/components/schemas/Customer'
+        name: #field virtual
+          description: 'Nombre de la cuenta.'
+          type: string
+          maxLength: 60
+        accountCategory: #field:ah_categoria
+          $ref: '#/components/schemas/AccountCategory'
+        averagePeriodType: #field:ah_tipo_promedio
+          $ref: '#/components/schemas/AveragePeriodType'
+        capitalizationPeriodType: #ah_capitalizacion
+          $ref: '#/components/schemas/CapitalizationPeriodType'
+        frequencyAccountStatement: #field:ah_ciclo
+          $ref: '#/components/schemas/FrequencyAccountStatement'
+        frozenBalance: #field:ah_monto_bloq
+          description: 'Saldo bloqueado.'
+          type: string
+          pattern: '^\d{1,13}\.\d{1,2}$'
+        availableBalance: #field virtual
+          $ref: '#/components/schemas/Amount'
+        availableBalanceNext12Hours:
+          $ref: '#/components/schemas/Amount'
+        deferredAvailableBalanceNext12Hours:
+          $ref: '#/components/schemas/Amount'
+        availableBalanceNext24Hours:
+          $ref: '#/components/schemas/Amount'
+        availableBalanceNext48Hours:
+          $ref: '#/components/schemas/Amount'
+        availableRemittancesBalance:
+          $ref: '#/components/schemas/Amount'
+        savingsinterest:
+          $ref: '#/components/schemas/Amount'
+        lastCutoffBalance:
+          $ref: '#/components/schemas/Amount'
+        lastActivityDate: #field virtual
+          description: 'Fecha de último movimiento de la cuenta.'
+          type: string
+          format: date
+        lastInternalActivityDate: #field virtual
+          description: 'Fecha de último movimiento interno de la cuenta.'
+          type: string
+          format: date
+        lastUpdateDate:  #field virtual
+          description: 'Fecha de última actualización de la cuenta.'
+          type: string
+          format: date
+        nextCutoffDate:  #field:ah_fecha_prx_corte
+          description: 'Fecha de próximo corte.'
+          type: string
+          format: date
+        lastCutoffDate:  #field:ah_fecha_ult_corte
+          description: 'Fecha de la última corte.'
+          type: string
+          format: date
+        lastCapitalizationDate: # field:ah_fecha_ult_capi
+          description: 'Fecha de la última capitalización de intereses sobre la cuenta.'
+          type: string
+          format: date
+        nextCapitalizationDate: #field:ah_fecha_prx_capita
+          description: 'Fecha de la próxima capitalización de intereses sobre la cuenta.'
+          type: string
+          format: date
+        preferedAddress: #field:ah_direccion_ec
+          $ref: 'COBISCustomersDomain-v2-3-0.yaml#/components/schemas/Address'
+        availableBalanceAverage:
+          $ref: '#/components/schemas/Amount'
+        accountAssignedToClerk: #field:ah_cta_funcionario
+          description: 'Indica si la cuenta pertenece a un funcionario de la institución financiera.'
+          type: boolean
+        accountType: #field:#ah_tipocta
+          $ref: '#/components/schemas/Segment'
+        accountSubtype: #field:ah_prod_banc
+          $ref: '#/components/schemas/AccountSubtype'
+        reasonForOrigination: #field:ah_origen
+          $ref: '#/components/schemas/ReasonForOrigination'
+        todayTax: #field:ah_tasa_hoy
+          description: 'Tasa que se aplicó al día de hoy.'
+          type: number
+          format: float
+        ownershipType:  #field: ah_ctitularidad
+          $ref: '#/components/schemas/OwnershipType'
+        externalCode: #field:ah_id_billetera
+          $ref: '#/components/schemas/ExternalCode'
+        availableAmount: #field:virtual
+          $ref: '#/components/schemas/Amount'
+        ledgerBalance: #field:virtual
+          $ref: '#/components/schemas/Amount'
+        minimumBalance: #field: virtual
+          $ref: '#/components/schemas/Amount'
+        maximumBalance: #field: virtual
+          $ref: '#/components/schemas/Amount'
+        maximumAmountByTransaction: #field: virtual
+          $ref: '#/components/schemas/Amount'
+        amountOfCredits: #ah_creditos
+          $ref: '#/components/schemas/Amount'
+        amountOfDebits: #ah_debitos
+          $ref: '#/components/schemas/Amount'
+        numberOfDebits: #ah_num_deb_mes
+          description: 'Débitos del mes en cantidad.'
+          type: integer
+          format: int32
+          minimum: 0
+        numberOfCredits: #ah_num_cred_mes
+          description: 'Créditos del mes en cantidad.'
+          type: integer
+          format: int32
+          minimum: 0
+        finalProduct: #field: virtual
+          $ref: '#/components/schemas/FinalProduct'
+        availableFundsForWithdrawalBeforeTaxes:
+          $ref: '#/components/schemas/Amount'
+
+    Branch: #table:cobis..cl_oficina
+      description: 'Oficina.'
+      properties:
+        code: #field:of_oficina
+          $ref: '#/components/schemas/BranchCode'
+        name: #field:of_nombre
+          description: 'Nombre de oficina.'
+          type: string
+          minLength: 1
+          maxLength: 64
+        #  of_filial
+        #  of_direccion
+        #  of_ciudad
+        #  of_telefono
+        #  of_subtipo
+        #  of_area
+        #  a_sucursal
+        #  of_regional
+        #  of_tip_punt_at
+        #  of_cir_comunic
+        #  of_nomb_encarg
+        #  of_ci_encarg
+        #  of_horario
+        #  of_tipo_horar
+        #  of_jefe_agenc
+        #  of_cod_fie_asf
+        #  of_fec_aut_asf
+        #  of_sector
+        #  of_depart_pais
+        #  of_provincia
+        #  of_barrio
+        #  of_relac_ofic
+        #  of_lat_coord
+        #  of_lat_grad
+        #  of_lat_min
+        #  of_lat_seg
+        #  of_long_coord
+        #  of_long_grad
+        #  of_long_min
+        #  of_long_seg
+        #  of_subregional
+        #  of_obs_horario
+        #  of_sucursal
+        #  of_zona
+        #  of_cob
+        #  of_bloqueada
+
+    Catalog: #table:cobis..cl_catalogo
+      description: 'Catálogo.'
+      properties:
+        table: #field:tabla
+          $ref: '#/components/schemas/TableCatalog'
+        code: #field:codigo
+          description: 'Código catálogo.'
+          type: string
+          minLength: 1
+          maxLength: 10
+        value: #field:valor
+          description: 'Nombre.'
+          type: string
+          maxLength: 140
+        status: #field:estado
+          description: >
+            'Estado:'
+              * V: Vigente
+              * B: Bloqueado
+              * E: Eliminado
+          type: string
+          enum: [V,B,E]
+        culture: #field:culture
+          description: 'Cultura del país donde se ejecutará.'
+          type: string
+          maxLength: 10
+        equivCode: #field:equiv_code
+          description: 'Código equivalente.'
+          type: string
+          maxLength: 10
+        type: #field:type
+          description: 'Tipo catálogo.'
+          type: string
+          maxLength: 10
+
+    City: #table:cobis..cl_ciudad
+      description: 'Ciudad.'
+      properties:
+        code: #  field:ci_ciudad
+          description: 'Código de la ciudad.'
+          type: integer
+          format: int32
+          minimum: 1
+        name: #  field:ci_descripcion
+          description: 'Nombre de la ciudad.'
+          type: string
+          minLength: 1
+          maxLength: 64
+        status: #  field:ci_estado
+          description: 'Estado de la ciudad.'
+          type: string # TODO: Validar catálogo
+          minLength: 1
+          maxLength: 1
+        #  ci_provincia
+        #  ci_cod_remesas
+        country: #  ci_pais
+          $ref: '#/components/schemas/Country'
+        #  ci_canton
+
+    Clerk: #table:cobis..cl_funcionario
+      description: 'Funcionario o responsable de un usuario del sistema.'
+      properties:
+        code: #field:fu_funcionario
+          description: 'Código del funcionario.'
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 32767
+        name: #field:fu_nombre
+          description: 'Nombre del funcionario.'
+          type: string
+          minLength: 1
+          maxLength: 64
+        sex: #field:fu_sexo
+          $ref: '#/components/schemas/Sex'
+        # fu_dinero
+        # fu_nomina
+        # fu_departamento
+        branch: #field:fu_oficina
+          $ref: '#/components/schemas/Branch'
+        # fu_cargo
+        # fu_secuencial
+        # fu_jefe
+        # fu_nivel
+        creationDate: #field:fu_fecha_ing
+          description: 'Fecha de creación.'
+          type: string
+          format: date
+        user: #field:us_login -> cobis..ad_usuario
+          $ref: '#/components/schemas/UserLogin'
+        # fu_telefono
+        # fu_fec_inicio
+        # fu_fec_final
+        password: #field: fu_clave
+          description:  'Contraseña del usuario funcionario.'
+          type: string
+          format: password
+          maxLength:  30
+        # fu_estado
+        # fu_offset
+        identification: #fu_cedruc ->
+          $ref: '#/components/schemas/Identification'
+        # fu_causa_bloqueo
+        # fu_fecha_cargo
+
+    Country: #table:cobis..cl_pais
+      description: 'País.'
+      properties:
+        code: #field:pa_pais
+          description: 'Código del país.'
+          type: number
+          format: int32
+          minimum: 1
+        name: #field:pa_descripcion
+          description: 'Nombre del país.'
+          type: string
+          minLength: 1
+          maxLength: 64
+        isoCode: #field:pa_abreviatura
+          description: 'Código de país según la especificación ISO.'
+          type: string
+          minLength: 1
+          maxLength: 3
+        # pa_continente
+        # pa_nacionalidad
+        status: #field:pa_estado
+          description: 'Estado de registro del país.'
+          type: string
+          minLength: 1
+          maxLength: 1
+
+    Currency: #table:cobis..cl_moneda
+      description: 'Moneda.'
+      properties:
+        code: #field:mo_moneda
+          description: 'Código de moneda.'
+          type: integer
+          minimum: 0
+          maximum: 32767
+        description: #field:mo_descripcion
+          description: 'Descripción de la moneda.'
+          type: string
+          minLength: 1
+          maxLength: 64
+        isoCode: #field:mo_nemonico
+          description: 'Código de la moneda según la especificación ISO.'
+          type: string
+          minLength: 3
+          maxLength: 3
+        symbol: #field:mo_simbolo
+          description: 'Símbolo de definición de la moneda.'
+          type: string
+          minLength: 1
+          maxLength: 5
+        country: #field:mo_pais
+          $ref: '#/components/schemas/Country'
+        # mo_decimales
+        status: #field:mo_estado TODO: Validar catálogo cobis..cl_estado_ser??
+          description: >
+            'Estado de la moneda:'
+              * V: Vigente
+              * B: Bloqueado
+              * E: Eliminado
+          type: string
+          enum: [V,B,E]
+
+    Department: #table:cobis..cl_departamento
+      description: 'Departamento de la organización.'
+      properties:
+        code: #field:de_departamento
+          description: 'Código del departamento.'
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 32767
+        name: #field:de_descripcion
+          description: 'Nombre del departamento.'
+          type: string
+          minLength: 1
+          maxLength: 64
+        subsidiary: #field:de_filial -> cobis..cl_filial
+          $ref: '#/components/schemas/Subsidiary'
+        branch: #field:de_oficina
+          $ref: '#/components/schemas/Branch'
+        #de_o_oficina
+        #de_o_departamento
+        #de_nivel
+
+    ErrorMessage: #table:cobis..cl_errores
+      description: 'Catálogo de errores.'
+      properties:
+        code: #field:numero
+          $ref: '#/components/schemas/ErrorMessageCode'
+        severity: #field:severidad
+          description: 'Gravedad del error.'
+          type: integer
+          format: int32
+          minimum: 0
+        message: #field:mensaje
+          description: 'Descripción del error.'
+          type: string
+          minLength: 1
+
+    ExternalApplication: #table:cobis..cts_aplicacion
+      description: 'Aplicación externa que consulta y procesa información financiera de COBIS.'
+      properties:
+        code: #field	ap_id_aplicacion
+          description: 'Código de la aplicación.'
+          type: integer
+          format: int32
+          minimum: 0
+        name: #field:ap_nombre
+          description: 'Nombre de la aplicación externa.'
+          type: string
+          minLength: 1
+          maxLength: 24
+        terminal: #field:	ap_terminal
+          description: 'Terminal desde donde se conecta la aplicación.'
+          type: string
+          minLength: 1
+          maxLength: 10
+        #	ap_estado
+
+    ExternalUser: #table:cts_usuario_externo
+      description: 'Usuario externo para aplicación que se conecta al core COBIS.'
+      type: object
+      properties:
+        application: #field:	ue_id_aplicacion
+          $ref: '#/components/schemas/ExternalApplication'
+        user: #field:	ue_usuario
+          description: 'Usuario externo.'
+          type: string
+          maxLength: 30
+        role: #field:	ue_rol
+          $ref: '#/components/schemas/Role'
+        trustRelationShip:  #field:	ue_id_relacion
+          $ref: '#/components/schemas/TrustRelationShip'
+        #	ue_estado
+
+    FinalProduct: #table: cob_remesas..pe_pro_final
+      description: 'Producto final.'
+      properties:
+        code: #field:	pf_pro_final
+          $ref: '#/components/schemas/FinalProductCode'
+        subsidiary: #field	pf_filial
+          #description: 'Filial del producto final.'
+          #allOf:
+          #  - $ref: 'COBISAdminDomain-v1-1-0.yaml#/components/schemas/Subsidiary'
+          $ref: '#/components/schemas/Subsidiary'
+        branch: #pf_sucursal
+          #allOf:
+          #  - $ref: 'COBISAdminDomain-v1-1-0.yaml#/components/schemas/Branch'
+          #description: 'Oficina.'
+          $ref: '#/components/schemas/Branch'
+        #	pf_mercado
+        #	pf_producto
+        #	pf_moneda
+        #	pf_tipo
+        description: #field:	pf_descripcion
+          description: 'Descripción del producto final.'
+          type: string
+          maxLength: 64
+        #	pf_depende
+        #	pf_provisiona
+        #	pf_cod_rango_edad
+
+    GeneralProduct: #table: virtual object
+      description: 'Producto general.'
+      type: object
+      properties:
+        number:
+          $ref: '#/components/schemas/ProductNumber'
+        type:
+          $ref: '#/components/schemas/ProductType'
+        status:
+          $ref: '#/components/schemas/ProductStatus'
+        productClass:
+          $ref: '#/components/schemas/ProductClass'
+        creationDate:
+          description: 'Fecha de creación del producto.'
+          type: string
+          format: date-time
+        balance:
+          #allOf:
+          #  - $ref: '#/components/schemas/Amount'
+          #description: 'Saldo actual.'
+          $ref: '#/components/schemas/Amount'
+
+    Identification: #table virtual object
+      description: 'Identificación de un cliente.'
+      properties:
+        number: #field virtual
+          $ref: '#/components/schemas/IdentificationNumber'
+        type: #field virtual
+          $ref: '#/components/schemas/IdentificationType'
+        issuanceDate: #field virtual
+          description: 'Fecha de emisión.'
+          type: string
+          format: date
+        issuenceCity: #field virtual
+          $ref: '#/components/schemas/City'
+        dueDate: #field virtual
+          description: 'Fecha de vencimiento.'
+          type: string
+          format: date
+        documentValidated: #field viritual
+          description: 'Indica si el número de documento está validado.'
+          type: boolean
+
+    IdentificationType: #table:cobis..cl_tipo_documento
+      description: 'Tipo de identificación de una persona natural o jurídica.'
+      properties:
+        code: #field:td_codigo
+          $ref: '#/components/schemas/IdentificationTypeCode'
+        name: #field:td_descripcion
+          description: 'Nombre del tipo de identifiación.'
+          type: string
+          minLength: 3
+          maxLength: 30
+        status: #field:td_estado # TODO: Catálogo
+          description: 'Estado del tipo de identificación.'
+          type: string
+          minLength: 1
+          maxLength: 1
+        #td_secuencial
+        #td_mascara
+        #td_tipoper
+        #td_provincia
+        #td_aperrapida
+        #td_bloquea
+        #td_nacionalidad
+        #td_digito
+        #td_estado
+        #td_desc_corta
+        #td_compuesto
+        #td_nro_compuesto
+        #td_adicional
+        #td_creación
+        #td_habilitado_mis
+        #td_habilitado_usu
+        #td_prefijo
+        #td_subfijo
+
+    Officer:  #table:cobis..cc_oficial
+      description: 'Asesor comercial definido como oficial de la entidad financiera.' #TODO Verificar definición
+      properties:
+        code: #field:oc_oficial
+          $ref: '#/components/schemas/OfficerCode'
+        clerk: #field:oc_funcionario > cobis..cl_funcionario.fu_funcionario
+          $ref: '#/components/schemas/Clerk'
+        segment: #field:oc_sector
+          $ref: '#/components/schemas/Segment'
+        #	oc_actividad
+        #	oc_ofi_nsuperior
+        #	oc_ofi_sustituto
+        type: #field:oc_tipo_oficial
+          $ref: '#/components/schemas/OfficerType'
+        #	oc_nivel
+        #	oc_categoria
+        email: #field:oc_mail
+          description: 'Dirección de correo electrónico del oficial.'
+          type: string
+          maxLength: 254
+
+    ProductType: #table:cobis..cl_producto
+      description: 'Tipo de producto.'
+      properties:
+        code: #field:pd_producto
+          $ref: '#/components/schemas/ProductCode'
+        #pd_tipo
+        name: #field:pd_descripcion
+          description: 'Nombre del tipo de producto.'
+          type: string
+          minLength: 1
+          maxLength: 64
+        abbreviation: #field:pd_abreviatura
+          description: 'Nombre del tipo de producto.'
+          type: string
+          minLength: 1
+          maxLength: 3
+        creationDate: #field:pd_fecha_apertura
+          description: 'Fecha de creación del tipo de producto.'
+          type: string
+          format: date-time
+        status: #field:pd_estado
+          $ref: '#/components/schemas/ProductTypeStatus'
+        #pd_saldo_minimo
+        #pd_costo
+
+    Province: #table:cobis..cl_provincia
+      description: 'Provincia.'
+      properties:
+        code: #field:pv_provincia
+          description: 'Código de la provincia.'
+          type: integer
+          format: int32
+        name: #field:pv_descripcion
+          description: 'Nombre de la provincia.'
+          type: string
+          minLength: 1
+          maxLength: 64
+        #pv_region_nat
+        #pv_region_ope
+        country: #field:pv_pais
+          $ref: '#/components/schemas/Country'
+        status: #field:pv_estado
+          type: string # TODO: Validar catálogo
+          minLength: 1
+          maxLength: 1
+        #pv_depart_pais //TODO Validar tabla / catálogo
+
+    Role: #table:cobis..ad_rol
+      description: 'Rol de cliente funcionario de la entidad financiera.'
+      type: object
+      properties:
+        code: #field:ro_rol
+          description: 'Código del rol de cliente.'
+          type:  integer
+          format: int32
+          minimum: 1
+          maximum: 255
+        subsidiary: #field:ro_filial
+          $ref: '#/components/schemas/Subsidiary'
+        description:  #field:ro_descripcion
+          description: 'Descripción del rol.'
+          type: string
+          maxLength: 64
+        creationDate: #field:ro_fecha_crea
+          description: 'Fecha de creación del rol.'
+          type: string
+          format: date-time
+        #	ro_creador
+        #	ro_estado
+        lastUpdatedDate: #field:ro_fecha_ult_mod
+          description: 'Fecha de última actualización del rol.'
+          type: string
+          format: date-time
+        #	ro_time_out
+        #	ro_admin_seg
+        #	ro_departamento
+        branch: #field:	ro_oficina
+          $ref: '#/components/schemas/Branch'
+
+    Subdivision: #table:cobis..cl_parroquia
+      description: 'Colonia o Parroquia.'
+      properties:
+        code: #field:pq_parroquia
+          description: 'Código.'
+          type: integer
+          minimum: 1
+        description: #field:pq_descripcion
+          description: 'Nombre.'
+          type: string
+          minLength: 1
+          maxLength: 160
+        subdivisionType: #field:pq_tipo
+          $ref: '#/components/schemas/SubdivisionType'
+        city: #field:pq_ciudad
+          $ref: '#/components/schemas/City'
+        zone: #field:pq_zona
+          $ref: 'COBISCustomersDomain-v2-3-0.yaml#/components/schemas/Zone'
+        status: #field:pq_estado
+          description: >
+            'Estado:'
+              * V: Vigente
+              * C: Cancelado
+          type: string
+          enum: [V,C]
+
+    Subsidiary: #table:cobis..cl_filial
+      description: 'Filial.'
+      properties:
+        code: #field:fi_filial
+          description: 'Código de la filial.'
+          type: integer
+          minimum: 1
+          maximum: 255
+        name: #field:fi_nombre
+          description: 'Nombre de la filial.'
+          type: string
+          minLength: 1
+          maxLength: 64
+        status: #field:fi_estado # TODO: Catálogo
+          type: string
+          minLength: 1
+          maxLength: 1
+        #  fi_direccion
+        #  fi_actividad
+        #  fi_abreviatura
+        #  fi_rep_nombre
+        #  fi_contador
+        #  fi_ruc
+        #  fi_cont_nivel
+
+    SystemParameter: #table:cobis..cl_parametro
+      description: 'Parámetro del sistema.'
+      properties:
+        nmemonic: #field:pa_nemonico
+          $ref: '#/components/schemas/ParameterMnemonic'
+        product: #field:pa_producto > ProductType.abbreviation
+          $ref: '#/components/schemas/ProductType'
+        description: #field:pa_parametro
+          description: 'Descripción del parámetro.'
+          type: string
+          minimum: 1
+          maximum: 160
+        type: #field:pa_tipo
+          description: >
+            'Tipo de parámetro:'
+              * I: INT
+              * C: CHAR
+              * T: TINYINT
+              * S: SMALLINT
+              * F: FLOAT
+              * M: MONEY
+              * D: DATETIME
+          type: string
+          enum: [I,C,T,S,F,M,D]
+        charValue: #field:pa_char
+          description: 'Valor del parámetro cuando el tipo es string.'
+          type: string
+          maxLength: 30
+        tinyintValue: #field:pa_tinyint
+          description: 'Valor del parámetro cuando el tipo es tinyint.'
+          type: integer
+          maximum: 32767
+        smallintValue: #field:pa_smallint
+          description: 'Valor del parámetro cuando el tipo es smallint.'
+          type: integer
+          maximum: 32767
+        intValue: #field:pa_int
+          description: 'Valor del parámetro cuando el tipo es integer.'
+          type: integer
+          maximum: 2147483647
+        moneyValue: #field:pa_money
+          description: 'Valor del parámetro cuando el tipo es moneda.'
+          type: number
+          format: double
+        datetimeValue: #field:pa_datetime
+          description: 'Valor del parámetro cuando el tipo es datetime.'
+          type: string
+          format: date-time
+        floatValue: #field:pa_float
+          description: 'Valor del parámetro cuando el tipo es float.'
+          type: number
+          format: float
+
+    TableCatalog: #table:cobis..cl_tabla
+      description: 'Tabla.'
+      properties:
+        code: #field:codigo
+          description: 'Código tabla.'
+          type: integer
+          minimum: 1
+          maximum: 6
+        table: #field:tabla
+          description: 'Nombre.'
+          type: string
+          minLength: 1
+          maxLength: 30
+        description: #field:descripcion
+          description: 'Descripción.'
+          type: string
+          minLength: 1
+          maxLength: 160
+
+    Town: #table:cobis..cl_localidad
+      description: 'Localidad.'
+      properties:
+        code: #field:lo_localidad
+          description: 'Código de la localidad.'
+          type: string
+          minLength: 1
+          maxLength: 10
+        city: #field:lo_ciudad
+          $ref: '#/components/schemas/City'
+        description: #field:lo_desc_localidad
+          description: 'Nombre de la localidad.'
+          type: string
+          minLength: 1
+          maxLength: 10
+
+    TrustRelationShip: #table:cobis..cts_relacion_confianza
+      description:  'Configuración de la relación de confianza para usuarios externos que se conectan al core COBIS.'
+      type: object
+      properties:
+        code: #field:rc_secuencial
+          description: 'Código de la configuración de la relación de confianza.'
+          type: integer
+          format: int32
+          minimum: 1
+        relationshipCode: #field:	rc_id_relacion
+          description: 'Código que relaciona la configuración de relación de confianza con el usuario y la aplicación externa.'
+          type: integer
+          format: int32
+          minimum: 1
+        #	rc_usuario
+        #	rc_rol
+        #	rc_oficina
+        #	rc_terminal
+        server: #field:	rc_servidor
+          description: 'Servidor CTS donde se genera la configuración de relación de confianza.'
+          type: string
+          minLength: 1
+          maxLength: 30
+        sessionIdetification: #field	rc_id_sesion
+          description: 'Identificador de la sesión que se genera en CTS.'
+          type: string
+          minLength: 1
+          maxLength: 24
+        ctsSession:   #field:rc_id_sesion_cts
+          description: 'Sesión generada en CTS.'
+          type: string
+          minLength: 1
+          maxLength: 51
+        #	rc_estado
+
+    User: #table:cobis..ad_usuario
+      description: 'Usuario.'
+      properties:
+        subsidiary: #field:us_filial
+          $ref: '#/components/schemas/Subsidiary'
+        branch: #field:us_oficina
+          $ref: '#/components/schemas/Branch'
+        #us_nodo
+        login: #field:us_login
+          $ref: '#/components/schemas/UserLogin'
+        assignmentDate: #field:us_fecha_asig
+          description: 'Fecha de asignación.'
+          type: string
+          format: date
+        # us_creador
+        lastUpdateDate: #field:us_fecha_ult_mod
+          description: 'Fecha de última modificación.'
+          type: string
+          format: date
+        lastUpdatePasswordDate: #field:us_fecha_ult_pwd
+          description: 'Fecha de última modificación de la contraseña.'
+          type: string
+          format: date
+        status: #field:us_estado
+          description: 'Estado.'
+          type: string
+          minLength: 1
+          maxLength: 1
+        password: #virtual
+          $ref: '#/components/schemas/Password'
+
+    ZipCode: #table:cobis..cl_codigo_postal
+      description: 'Código postal.'
+      properties:
+        code: #field:cp_codigo
+          description: 'Código postal.'
+          type: string
+          maxLength: 10
+        #cp_estado
+        city: #field:cp_municipio
+          $ref: '#/components/schemas/City'
+        #cp_colonia
+        country: #field:cp_pais
+          $ref: '#/components/schemas/Country'
+        #cp_estado_h //TODO
+        #cp_municipio_h //TODO
+        #cp_colonia_h //TODO
+
+    # CATALOGS
+    AveragePeriodType : #table: cobis..cl_catalogo[table:5884:ah_tpromedio]
+      description: 'Periodo en que se calcula el promedio de la cuenta de ahorro.'
+      properties:
+        code:
+          description: 'Código del periodo en que se calcula el promedio de la cuenta de ahorro.. Ver listado en: [http://www.cobiscorp.com/api/catalogo#ah_tpromedio](http://www.cobiscorp.com/api/catalogo#ah_tpromedio).' # TODO: Actualizar enlace a documentación de catálogos dinámicos.
+          type: string
+          minLength: 1
+          maxLength: 10
+        description:
+          $ref: '#/components/schemas/CatalogDescription'
+        status:
+          $ref: '#/components/schemas/CatalogStatus'
+
+    CapitalizationPeriodType: #table: cobis..cl_catalogo[table:5870:ah_capitalizacion]
+      description: 'Periodo para la capitalización de intereses sobre la cuenta de ahorros.'
+      type: object
+      properties:
+        code:
+          description: 'Código del periodo para la capitalización de intereses sobre la cuenta de ahorros: Ver listado en: [http://www.cobiscorp.com/api/catalogo#ah_capitalizacion](http://www.cobiscorp.com/api/catalogo#ah_capitalizacion).' # TODO: Actualizar enlace a documentación de catálogos dinámicos.
+          type: string
+          minLength: 1
+          maxLength: 10
+        description:
+          $ref: '#/components/schemas/CatalogDescription'
+        status:
+          $ref: '#/components/schemas/CatalogStatus'
+
+    Channel: #table: cobis..cl_catalogo[table:5870:re_canales]
+      description: 'Canal configurado para la entidad bancaria.'
+      type: object
+      properties:
+        code:
+          description: 'Código del canal configurado para la entidad bancaria.: Ver listado en: [http://www.cobiscorp.com/api/catalogo#re_canales](http://www.cobiscorp.com/api/catalogo#re_canales).' # TODO: Actualizar enlace a documentación de catálogos dinámicos.
+          type: string
+          minLength: 1
+          maxLength: 10
+        description:
+          $ref: '#/components/schemas/CatalogDescription'
+        status:
+          $ref: '#/components/schemas/CatalogStatus'
+
+    FrequencyAccountStatement: #table: cobis..cl_catalogo[table:5883:cc_ciclo]
+      description: 'Frecuencia o ciclo de emisión de estado de cuenta.'
+      properties:
+        code:
+          description: 'Código de la frecuencia o ciclo de emisión de estado de cuenta: Ver listado en: [http://www.cobiscorp.com/api/catalogo#cc_ciclo](http://www.cobiscorp.com/api/catalogo#cc_ciclo).' # TODO: Ajustar descripción. TODO: Actualizar enlace a documentación de catálogos dinámicos.
+          type: string
+          minLength: 1
+          maxLength: 10
+        description:
+          $ref: '#/components/schemas/CatalogDescription'
+        status:
+          $ref: '#/components/schemas/CatalogStatus'
+
+    Gender: #table: cobis..cl_catalogo[table:24101:cl_genero]
+      description: 'Género o sexo de la persona con el que se define.'
+      properties:
+        code:
+          description: 'Código del sexo de la persona con el que se define. Ver listado en: [http://www.cobiscorp.com/api/catalogo#cl_genero](http://www.cobiscorp.com/api/catalogo#cl_genero).' # TODO: Actualizar enlace a documentación de catálogos dinámicos.
+          type: string
+          minLength: 1
+          maxLength: 10
+        description:
+          $ref: '#/components/schemas/CatalogDescription'
+        status:
+          $ref: '#/components/schemas/CatalogStatus'
+
+    Indicator: #table: cobis..cl_catalogo[table:1787:ah_tipo_indicador]
+      description: 'Indica el tipo de saldo que se afecta con la nota.'
+      properties:
+        code:
+          description: 'Código del tipo de indicador.. Ver listado en: [http://www.cobiscorp.com/api/catalogo#ah_tipo_indicador](http://www.cobiscorp.com/api/catalogo#ah_tipo_indicador).' # TODO: Ajustar descripción. TODO: Actualizar enlace a documentación de catálogos dinámicos.
+          type: string
+          minLength: 1
+          maxLength: 10
+        description:
+          $ref: '#/components/schemas/CatalogDescription'
+        status:
+          $ref: '#/components/schemas/CatalogStatus'
+
+    MaritalStatus: #table: cobis..cl_catalogo[table:211:cl_ecivil]
+      description: 'Estado civil de la persona.'
+      properties:
+        code:
+          description: 'Código del estado civil de la persona. Ver listado en: [http://www.cobiscorp.com/api/catalogo#cl_ecivil](http://www.cobiscorp.com/api/catalogo#cl_ecivil).' # TODO: Actualizar enlace a documentación de catálogos dinámicos.
+          type: string
+          minLength: 1
+          maxLength: 10
+        description:
+          $ref: '#/components/schemas/CatalogDescription'
+        status:
+          $ref: '#/components/schemas/CatalogStatus'
+
+    Message: #table virtual object
+      description: 'mensaje para el frontend.'
+      properties:
+        code:
+          type: integer
+          minimum: 0
+        severity:
+          type: integer
+          minimum: 0
+        description:
+          type: string
+          maxLength: 1024
+
+    Nature: #virtual cobis..cl_catalogo[table:1289:ah_causa_nc:cuando la transacción es una nota crédito, table:1290:ah_causa_nd: cuando la transacción es una nota débito]
+      description: 'Razón por la cual se hace el ajuste para una nota débito o una nota crédito, ayudando a generar una contabilidad específica.'
+      type: object
+      properties:
+        code:
+          description: 'Código de la causal. Según el tipo de transacción, este campo puede ser diligenciado con diferentes listas. Para una transacción de nota crédito: Ver listado en: [http://www.cobiscorp.com/api/catalogo#ah_causa_nc](http://www.cobiscorp.com/api/catalogo#ah_causa_nc). Para una transacción de nota débito: Ver listado en: [http://www.cobiscorp.com/api/catalogo#ah_causa_nd](http://www.cobiscorp.com/api/catalogo#ah_causa_nd)' # TODO: Ajustar descripción. TODO: Actualizar enlace a documentación de catálogos dinámicos.
+          type: string
+          minLength: 1
+          maxLength: 10
+        description:
+          $ref: '#/components/schemas/CatalogDescription'
+        status:
+          $ref: '#/components/schemas/CatalogStatus'
+
+    OfficerType: #table: cobis..cl_catalogo[table:23:cc_tipo_oficial]
+      description: 'Tipo de oficial.'
+      properties:
+        code:
+          description: 'Código del tipo de oficial. Ver listado en: [http://www.cobiscorp.com/api/cl_catalogo#cc_tipo_oficial](http://www.cobiscorp.com/api/cl_catalogo#cc_tipo_oficial).' # TODO: Actualizar enlace a documentación de catálogos dinámicos.
+          type: string
+          minLength: 1
+          maxLength: 10
+        description:
+          $ref: '#/components/schemas/CatalogDescription'
+        status:
+          $ref: '#/components/schemas/CatalogStatus'
+
+    Parameter: #table virtual object
+      description: 'parámetro para el frontend.'
+      properties:
+        name:
+          description: 'Nombre del parámetro.'
+          type: string
+          maxLength: 140
+        dataType:
+          description: 'Tipo de dato.'
+          type: number
+          minimum: 0
+        ioType:
+          description: 'Indicador de entrada o salida.'
+          type: number
+          minimum: 0
+        isNull:
+          description: 'Indicador de nulo.'
+          type: boolean
+        value:
+          description: 'Valor del parámetro.'
+          type: string
+          maxLength: 100
+        len:
+          description: 'Longitud del parámetro.'
+          type: number
+          minimum: 0
+
+    CountryPrefix: #table: cobis..cl_catalogo[table:5884:cl_ddi_pais]
+      description: 'Prefijo de país.'
+      properties:
+        code:
+          description: 'Código del prefijo del país.. Ver listado en: [http://www.cobiscorp.com/api/catalogo#ah_tpromedio](http://www.cobiscorp.com/api/catalogo#cl_ddi_pais).'
+          type: string
+          minLength: 1
+          maxLength: 10
+        description:
+          $ref: '#/components/schemas/CatalogDescription'
+        status:
+          $ref: '#/components/schemas/CatalogStatus'
+
+    ProcedureRequest: #table virtual object
+      description: 'Objecto de petición de frontwend.'
+      properties:
+        token:
+          type: string
+          minLength: 1
+        params:
+          type: array
+          items:
+            $ref: '#/components/schemas/Parameter'
+        spName:
+          type: string
+          minLength: 1
+          maxLength: 140
+
+    ProcedureResponse: #table virtual object
+      description: 'Objecto de respuesta de frontend.'
+      properties:
+        returnCode:
+          type: integer
+          minimum: 0
+        token:
+          type: string
+          minLength: 1
+          maxLength: 1024
+        params:
+          type: array
+          items:
+            $ref: '#/components/schemas/Parameter'
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Message'
+        resultSets:
+          type: array
+          items:
+            $ref: '#/components/schemas/Result'
+        status:
+          type: boolean
+
+    ProductClass: #table: cobis..cl_catalogo[table:cob_remesas..pe_pro_bancario: cuando el producto sea de cuentas, table:1287:cr_clase_cartera: cuando el producto sea de cartera]
+      description: 'Clase de un producto.'
+      properties:
+        code:
+          description: 'Código de la clase de un producto. Ver listado en: [http://www.cobiscorp.com/api/catalogo#cr_clase_cartera ](http://www.cobiscorp.com/api/catalogo#cr_clase_cartera).' # TODO: Ajustar descripción. TODO: Actualizar enlace a documentación de catálogos dinámicos.
+          type: string
+          minLength: 1
+          maxLength: 10
+        description:
+          $ref: '#/components/schemas/CatalogDescription'
+        status:
+          $ref: '#/components/schemas/CatalogStatus'
+
+    ProductStatus: #table: cobis..cl_catalogo[table:6877:ah_estado_cta: cuando el producto sea de cuentas, table:cob_cartera..ca_estado: cuando el producto sea de cartera]
+      description: 'Estado de un producto.'
+      properties:
+        code:
+          description: 'Código del estado del producto. Según el tipo de producto, este campo puede ser diligenciado con diferentes listas. Para un producto de cuentas: Ver listado en: [http://www.cobiscorp.com/api/catalogo#ah_estado_cta ](http://www.cobiscorp.com/api/catalogo#ah_estado_cta ). Para un producto de cartera: Ver listado en: [http://www.cobiscorp.com/api/catalogo#cob_cartera..ca_estado](http://www.cobiscorp.com/api/catalogo#cob_cartera..ca_estado)' # TODO: Ajustar descripción. TODO: Actualizar enlace a documentación de catálogos dinámicos.
+          type: string
+          minLength: 1
+          maxLength: 10
+        description:
+          $ref: '#/components/schemas/CatalogDescription'
+        status:
+          $ref: '#/components/schemas/CatalogStatus'
+
+    ProductTypeStatus: #table: cobis..cl_catalogo[table:18:cl_tproducto]
+      description: 'Estado de un producto.'
+      properties:
+        code:
+          description: 'Código del estado del producto. Ver listado en: [http://www.cobiscorp.com/api/catalogo#cl_tproducto ](http://www.cobiscorp.com/api/catalogo#cl_tproducto ).' # TODO: Ajustar descripción. TODO: Actualizar enlace a documentación de catálogos dinámicos.
+          type: string
+          minLength: 1
+          maxLength: 10
+        description:
+          $ref: '#/components/schemas/CatalogDescription'
+        status:
+          $ref: '#/components/schemas/CatalogStatus'
+
+    PropertyType: #table: cobis..cl_catalogo[table:7881:cl_tpropiedad]
+      description: 'Tipo de propiedad.'
+      properties:
+        code:
+          description: 'Código del estado del producto. Ver listado en: [http://www.cobiscorp.com/api/catalogo#cl_tpropiedad ](http://www.cobiscorp.com/api/catalogo#cl_tpropiedad ).' # TODO: Ajustar descripción. TODO: Actualizar enlace a documentación de catálogos dinámicos.
+          type: string
+          minLength: 1
+          maxLength: 10
+        description:
+          $ref: '#/components/schemas/CatalogDescription'
+        status:
+          $ref: '#/components/schemas/CatalogStatus'
+
+    ReasonForOrigination: # cobis..cl_catalogo[table:5892:ah_tipocta]
+      description: 'Tipo origen de la apertura de la cuenta.'
+      type: object
+      properties:
+        code:
+          description: 'Código del tipo origen de la apertura de la cuenta: Ver listado en: [http://www.cobiscorp.com/api/catalogo#ah_tipocta](http://www.cobiscorp.com/api/catalogo#ah_tipocta).' # TODO: Actualizar enlace a documentación de catálogos dinámicos.
+          type: string
+          minLength: 1
+          maxLength: 10
+        description:
+          $ref: '#/components/schemas/CatalogDescription'
+        status:
+          $ref: '#/components/schemas/CatalogStatus'
+
+    Result: #table virtual object
+      description: 'Resultado de la consulta.'
+      properties:
+        metaData:
+          $ref: '#/components/schemas/ResultSetHeader'
+        data:
+          $ref: '#/components/schemas/ResultSetData'
+
+    ResultSetData: #table virtual object
+      description: 'Datos para el frontend.'
+      properties:
+        rows:
+          description: 'Registros.'
+          type: array
+          items:
+            $ref: '#/components/schemas/ResultSetRow'
+
+    ResultSetHeader: #table virtual object
+      description: 'Resultados de las metadata de la cabecera.'
+      properties:
+        columns:
+          description: 'Columnas.'
+          type: array
+          items:
+            $ref: '#/components/schemas/ResultSetHeaderColumn'
+
+    ResultSetHeaderColumn: #table virtual object
+      description: 'Definición de las columnas en las cabeceras.'
+      properties:
+        name:
+          description: 'Nombre.'
+          type: string
+          minLength: 1
+          maxLength: 140
+        type:
+          description: 'Tipo.'
+          type: number
+          minimum: 0
+        length:
+          description: 'Longitud.'
+          type: number
+          minimum: 0
+
+    ResultSetRow: #table virtual object
+      description: 'Definición de las filas.'
+      properties:
+        columnData:
+          description: 'Datos de columna.'
+          type: array
+          items:
+            $ref: '#/components/schemas/ResultSetRowColumnData'
+
+    ResultSetRowColumnData: #table virtual object
+      description: 'Definición los datos de las columnas.'
+      properties:
+        isNull:
+          description: 'Indicador de nulo.'
+          type: boolean
+        value:
+          description: 'Valor del registro.'
+          type: string
+          minLength: 1
+          maxLength: 150
+
+    Segment: #table: cobis..cl_catalogo[table:5116:ah_sector]
+      description: 'Naturaleza del segmento de clientes para productos bancarios.'
+      properties:
+        code:
+          description: 'Código del segmento de cliente. Ver listado en: [http://www.cobiscorp.com/api/catalogo#ah_sector](http://www.cobiscorp.com/api/catalogo#ah_sector).' # TODO: Actualizar enlace a documentación de catálogos dinámicos.
+          type: string
+          minLength: 1
+          maxLength: 10
+        description:
+          $ref: '#/components/schemas/CatalogDescription'
+        status:
+          $ref: '#/components/schemas/CatalogStatus'
+
+    Sex: #table: cobis..cl_catalogo[table:4:cl_sexo]
+      description: 'Género o sexo de la persona como nace.'
+      properties:
+        code:
+          description: 'Código del sexo de la persona como nace. Ver listado en: [http://www.cobiscorp.com/api/catalogo#cl_sexo](http://www.cobiscorp.com/api/catalogo#cl_sexo).' # TODO: Actualizar enlace a documentación de catálogos dinámicos.
+          type: string
+          minLength: 1
+          maxLength: 10
+        description:
+          $ref: '#/components/schemas/CatalogDescription'
+        status:
+          $ref: '#/components/schemas/CatalogStatus'
+
+    SubdivisionType: #table: cobis..cl_catalogo[table:5116:cl_tparroquia]
+      description: 'Tipos de Colonia o Parroquia.'
+      properties:
+        code:
+          description: 'Código del tipo. Ver listado en: [http://www.cobiscorp.com/api/catalogo#cl_tparroquia](http://www.cobiscorp.com/api/catalogo#cl_tparroquia).' # TODO: Actualizar enlace a documentación de catálogos dinámicos.
+          type: string
+          minLength: 1
+          maxLength: 10
+        description:
+          $ref: '#/components/schemas/CatalogDescription'
+        status:
+          $ref: '#/components/schemas/CatalogStatus'
+
+    UserDataCatalogStatus: #table: cobis..cl_catalogo[table::cl_estado_ser]
+      description:  'Estado de vigencia de valores de catálogos.'
+      type: object
+      properties:
+        code:
+          description: 'Estado de vigencia de valores de catálogos: Ver listado en: [http://www.cobiscorp.com/api/catalogo#pf_base_calculo](http://www.cobiscorp.com/api/catalogo#pf_base_calculo)' # TODO: Ajustar descripción. TODO: Actualizar enlace a documentación de catálogos dinámicos.
+          type: string
+          minLength: 1
+          maxLength: 10
+        description:
+          $ref: 'COBISAdminDomain-v1-1-0.yaml#/components/schemas/CatalogDescription'
+        status:
+          $ref: 'COBISAdminDomain-v1-1-0.yaml#/components/schemas/CatalogStatus'
+
+    UserRoles:  #table: virtual
+      description: 'Asesor comercial definido como oficial de la entidad financiera.' #TODO Verificar definición
+      properties:
+        login: #field: virtual
+          $ref: '#/components/schemas/UserLogin'
+        subsidiaries: #field: virtual
+          type: array
+          items:
+            allOf:
+                - $ref: '#/components/schemas/Subsidiary'
+                - type: object
+        branches: #field:	virtual
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/Branch'
+              - type: object
+        roles: #field:	virtual
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/Role'
+              - type: object
+
+    WeekDay: #table: cobis..cl_catalogo[table:644:cr_dias_semana]
+      description: 'Días de la semana.'
+      properties:
+        code:
+          description: 'Código del día de la semana. Ver listado en: [http://www.cobiscorp.com/api/cl_catalogo#cr_dias_semana](http://www.cobiscorp.com/api/cl_catalogo#cr_dias_semana).' # TODO: Actualizar enlace a documentación de catálogos dinámicos.
+          type: string
+          minLength: 1
+          maxLength: 10
+        description:
+          $ref: '#/components/schemas/CatalogDescription'
+        status:
+          $ref: '#/components/schemas/CatalogStatus'
+
+
+    # KEY ELEMENTS
+    AccountNumber: #table virtual object
+      description: 'Número de cuenta.'
+      type: string
+      minLength: 5
+      maxLength: 24
+
+    ChannelCode: #key TODO: Validar implementación de objeto en BD.
+      description: >
+        'Canal transccional'
+          * 1: Oficina
+          * 2: Agilizador
+          * 3: Internet
+          * 4: ATM
+          * 5: APP Móvil
+      type: integer
+      enum: [1,2,3,4,5]
+
+    CatalogDescription: # key cobis..cl_catalogo.descripcion
+      description: 'Descripción de un elemento de un catálogo.'
+      type: string
+      minLength: 1
+      maxLength: 64
+
+    CatalogStatus: # key cobis..cl_catalogo.estado
+      description: 'Estado de un elemento de un catálogo.'
+      type: string
+      minLength: 1
+      maxLength: 1
+
+    ErrorMessageCode:
+      description: 'Código del error.'
+      type: integer
+      format: int32
+      minimum: 0
+
+    IdentificationTypeCode: #key cobis..cl_tipo_documento.td_codigo
+      description: 'Tipo de identificación de una persona natural o jurídica. Ver listado en: [http://www.cobiscorp.com/api/tabla#cl_tipo_documento](http://www.cobiscorp.com/api/tabla#cl_tipo_documento).' # TODO: Actualizar enlace a documentación de catálogos dinámicos.
+      type: string
+      minLength: 1
+      maxLength: 4
+
+    IdentificationNumber: #key cobis..cl_ente.en_ced_ruc # TODO: Revisar implementación en BD.
+      description: 'Número de identificación de una persona natural o jurídica.'
+      type: string
+      minLength: 5
+      maxLength: 32
+
+    OfficerCode:
+      description: 'Código del oficial.'
+      type: integer
+      format: int32
+      minimum: 1
+      maximum: 32767
+
+    ParameterMnemonic: #key cobis..cl_parametro.pa_nemonico
+      description: 'Nemónico del parámetro.'
+      type: string
+      minimum: 1
+      maximum: 6
+
+    ProductCode:
+      description: 'Código del tipo de producto.'
+      type: integer
+      minimum: 1
+      maximum: 255
+
+    ProductNumber: #field virtual object
+      description: 'Código del producto.'
+      type: string
+      minLength: 1
+      maxLength: 30
+
+    UserLogin: #key cobis..ad_usuario.us_login
+      description: 'Login de usuario en el sistema CORE. Los usuarios autorizados realizan y autorizan transacciones en  el sistema.'
+      type: string
+      minLength: 1
+      maxLength: 30
+
+    #########################
+    #  GENERAL COMPONENTS   #
+    #########################
+    Amount: #table virtual Object
+      description: 'Valor monetario'
+      type: string
+      pattern: '^\d{1,13}\.\d{1,2}$'
+
+    Password:
+      description: 'Contraseña del usuario funcionario.'
+      type: string
+      format: password
+      minLength: 1
+      maxLength:  30
+
+    AccountCode: #key:ah_cuenta
+      description: 'Código interno de la cuenta' #ah_cuenta
+      type: integer
+      format: int32
+      minimum: 1
+
+    BranchCode: #key:ah_cuenta
+      description: 'Código interno de la cuenta' #ah_cuenta
+      type: integer
+      minimum: 1
+      maximum: 32767
+
+    FinalProductCode:
+      description: 'Código del producto final.'
+      type: integer
+      format: int32
+      minimum: 1
+      maximum: 32767
+
+    AccountStatus: #cobis..cl_catalogo[table:ah_estado_cta]
+      description: 'Estado de la cuenta.'
+      properties:
+        code:
+          description: 'Código del estado de la cuenta. Ver listado en: [http://www.cobiscorp.com/api/catalogo#ah_estado_cta](http://www.cobiscorp.com/api/catalogo#ah_estado_cta).' # TODO: Actualizar enlace a documentación de catálogos dinámicos.
+          type: string
+          minLength: 1
+          maxLength: 10
+        description:
+          $ref: '#/components/schemas/CatalogDescription'
+        status:
+          $ref: '#/components/schemas/CatalogStatus'
+
+    Passbook: #table:ah_cuenta (virtual)
+      description: 'Libreta de cuenta de ahorros.'
+      properties:
+        number: #field:ah_numlib
+          description: 'Número de la libreta de ahorros.'
+          type: integer
+          format: int32
+        controlNumber: #field:ah_control
+          description: 'Número de control de la libreta.'
+          type: integer
+          format: int32
+        line: #field:ah_linea
+          description: 'Número de lineas impresas en la libreta.'
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 32767
+        balance: #field:ah_saldo_libreta
+          $ref: '#/components/schemas/Amount'
+
+    AccountCategory: #table: cobis..cl_catalogo[table:5881:pe_categoria]
+      description: 'Categoría de la cuenta de ahorro.'
+      type: object
+      properties:
+        code:
+          description: 'Código de categoría de la cuenta de ahorro: Ver listado en: [http://www.cobiscorp.com/api/catalogo#pe_categoria](http://www.cobiscorp.com/api/catalogo#pe_categoria)' # TODO: Ajustar descripción. TODO: Actualizar enlace a documentación de catálogos dinámicos.
+          type: string
+          minLength: 1
+          maxLength: 10
+        description:
+          $ref: '#/components/schemas/CatalogDescription'
+        status:
+          $ref: '#/components/schemas/CatalogStatus'
+
+    AccountSubtype: #table:cob_remesas..pe_pro_bancario
+      description: 'Define el tipo de producto bancario asociado a cuentas de ahorros.'
+      type: object
+      properties:
+        code: #field:	pb_pro_bancario
+          description: 'Código del producto bancario.'
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 32767
+        description:  #	field:  pb_descripcion
+          description: 'Descripción definida para el producto bancario.'
+          type: string
+          maxLength: 64
+        status:  #	field:  pb_estado
+          description: >
+            'Estado de vigencia del producto bancario.'
+              * V: VIGENTE
+          type: string
+          enum: [V]
+          maxLength: 1
+        dateState: #field:  pb_fecha_estado
+          type: string
+          format: date-time
+        mnemonic: #field: pb_nemonico
+          description: 'Nemónico del producto bancario.'
+          type: string
+          minLength: 1
+          maxLength: 10
+        bankProductType:  #field: pb_tipo_producto
+          $ref: '#/components/schemas/BankProductType'
+        ownWallet:  #field: pb_id_billetera
+          description:  'Define si el producto bancario posee billetera.'
+          type: boolean
+
+    OwnershipType: #cobis..cl_catalogo[table:ah_titularidad]
+      description: 'Tipo de titularidad.'
+      properties:
+        code:
+          description: 'Código de titularidad en canales. Ver listado en: [http://www.cobiscorp.com/api/catalogo#ah_titularidad](http://www.cobiscorp.com/api/catalogo#ah_titularidad).' # TODO: Actualizar enlace a documentación de catálogos dinámicos.
+          type: string
+          minLength: 1
+          maxLength: 10
+        description:
+          $ref: '#/components/schemas/CatalogDescription'
+        status:
+          $ref: '#/components/schemas/CatalogStatus'
+
+    ExternalCode: #key:ah_ #TODO: definición del codigo externo de la cuenta en la ah_cuenta
+      description: 'Código externo de la cuenta de ahorros.' #ah_cuenta
+      type: string
+      maxLength: 40
+
+    BankProductType: #cobis..cl_catalogo[table:pe_tipo_producto]
+      description: 'Tipo de producto bancario.'
+      properties:
+        code:
+          description: 'Código del tipo de producto bancario. Ver listado en: [http://www.cobiscorp.com/api/catalogo#pe_tipo_producto](http://www.cobiscorp.com/api/catalogo#pe_tipo_producto).' # TODO: Actualizar enlace a documentación de catálogos dinámicos.
+          type: string
+          minLength: 1
+          maxLength: 10
+        description:
+          $ref: '#/components/schemas/CatalogDescription'
+        status:
+          $ref: '#/components/schemas/CatalogStatus'

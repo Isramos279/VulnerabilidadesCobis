@@ -1,0 +1,80 @@
+{
+    "config": [
+        {
+            "parameterKey": "LogLevel",
+            "parameterValue": "TRACE"
+        },
+        {
+            "parameterKey": "Module",
+            "parameterValue": "Atm"
+        },
+        {
+            "parameterKey": "ParametersStoreCacheExpirationTime",
+            "parameterValue": 120
+        },
+        {
+            "parameterKey": "LambdaAuthorizer",
+            "parameterValue": "auth-authorization-challenge"
+        },
+        {
+            "parameterKey": "Organization",
+            "parameterValue": "Cobiscorp"
+        },
+        {
+            "parameterKey": "Version",
+            "parameterValue": "0.1"
+        },
+        {
+            "parameterKey": "TenantId",
+            "parameterValue": "t1"
+        },
+        {
+            "parameterKey": "ProcessingType",
+            "parameterValue": "ONLINE"
+        },
+        {
+            "parameterKey": "SharedResourcesAccount",
+            "parameterValue": "858761987689"
+        },
+        {
+            "parameterKey": "DaysRetentionDev",
+            "parameterValue": 3
+        },
+        {
+            "parameterKey": "DaysRetentionQA",
+            "parameterValue": 3
+        },
+        {
+            "parameterKey": "DaysRetentionProd",
+            "parameterValue": 30
+        },
+        {
+            "parameterKey": "StageMainVersionName",
+            "parameterValue": "v1"
+        },
+        {
+            "parameterKey": "LambdaAliasProduction",
+            "parameterValue": "production"
+        },
+        {
+            "parameterKey": "LambdaAliasBeta",
+            "parameterValue": "beta"
+        },
+        {
+            "parameterKey": "DBConnectionExpirationTime",
+            "parameterValue": 300
+        },
+        {
+            "parameterKey": "DashboardName",
+            "parameterValue": "COBISAtm"
+        },
+        {
+            "parameterKey": "TracingMode",
+            "parameterValue": "true"
+        },
+        {
+            "parameterKey": "TimeZone",
+            "parameterValue": "America/Bogota"
+        }
+    ]
+}

@@ -1,0 +1,156 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>cobis-atm-serverless-service-online</artifactId>
+    <name>cobis-atm-online</name>
+
+    <packaging>jar</packaging>
+    <parent>
+        <groupId>com.cobis.cloud.atm</groupId>
+        <artifactId>cobis-atm-serverless-service</artifactId>
+        <version>1.0.0</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <!-- GENERAL DEPENDENCIES -->
+    <dependencies>
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-lambda-java-core</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.cobis.cloud</groupId>
+            <artifactId>cobis-cloud-cts</artifactId>
+            <version>${com.cobis.cloud.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.testcontainers/testcontainers -->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <version>1.15.2</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.cobiscorp.businesslogic.BL_Infrastructure_commons</groupId>
+            <artifactId>BL_Infrastructure_commons</artifactId>
+            <version>3.6.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.protobuf</groupId>
+                    <artifactId>protobuf-java</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        
+        <dependency>
+            <groupId>com.cobiscorp.businesslogic</groupId>
+            <artifactId>cobis-atm-backend</artifactId>
+            <version>${com.cobis.atm.backend}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.cobiscorp.businesslogic</groupId>
+            <artifactId>cobis-channels-commons-backend</artifactId>
+            <version>${com.cobis.channels.commons.backend}</version>
+            <classifier>api</classifier>
+        </dependency>
+
+        <dependency>
+            <groupId>com.cobiscorp.businesslogic.general</groupId>
+            <artifactId>general</artifactId>
+            <version>${com.cobiscorp.businesslogic.general}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.cobiscorp.customers</groupId>
+            <artifactId>cobis-mis-backend</artifactId>
+            <version>${com.cobiscorp.customers}</version>
+            <classifier>api</classifier>
+            <exclusions>
+                <exclusion>
+                    <artifactId>cobis-general-domains</artifactId>
+                    <groupId>com.cobis.cloud.general.objects</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+          		
+    </dependencies>
+
+    <build>
+        <finalName>cobis-atm-serverless-service</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <execution>
+                        <id>cobis-atm-online</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/assembly/jar-atm-online.xml</descriptor>
+                            </descriptors>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <version>2.8</version>
+                    <executions>
+                        <execution>
+                            <id>default-cli</id>
+                            <configuration>
+                                <artifactItems>
+                                    <artifactItem>
+                                        <groupId>layer-builder</groupId>
+                                        <artifactId>layer-builder</artifactId>
+                                        <version>0.0.1-SNAPSHOT</version>
+                                        <type>[ packaging ]</type>
+                                        <outputDirectory>${project.build.vdirectory}</outputDirectory>
+                                    </artifactItem>
+                                </artifactItems>
+                                <outputDirectory>
+                                    ${project.basedir}/dependencies/atm-layer/java/lib
+                                </outputDirectory>
+                                <excludeArtifactIds>
+                                    classmate,
+                                    protobuf-java,
+                                    hibernate-validator,
+                                    javax.el,
+                                    jboss-logging,
+                                    validation-api,
+                                    hibernate-validator-annotation-processor,
+                                    javax.el-api,
+                                    cobis-digitalcore-batch-commons,
+                                    BL_valida_siprocesa
+                                </excludeArtifactIds>
+                                <includeScope>compile</includeScope>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+</project>

@@ -1,0 +1,202 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  atm-service
+
+  SAM Template for atm-service Load Config
+
+
+Parameters:
+  ApplicationId:
+    Type: String
+    Description: "ID de la aplicación"
+  ConfigurationProfileName:
+    Type: String
+    Description: "ID de la configuración del perfil"
+  EnvironmentId:
+    Type: String
+    Description: "Identificador del ambiente"
+
+Resources:
+  DependentConfigurationProfile:
+    Type: AWS::AppConfig::ConfigurationProfile
+    Properties:
+      ApplicationId: !Ref ApplicationId
+      Name: !Ref ConfigurationProfileName
+      LocationUri: "hosted"
+
+  HostedConfigurationVersion:
+    Type: AWS::AppConfig::HostedConfigurationVersion
+    Properties:
+      ApplicationId: !Ref ApplicationId
+      ConfigurationProfileId: !Ref DependentConfigurationProfile
+      Description: 'Configuración de versión local'
+      Content: '
+      {
+  "parameters": {
+    "environmentId": "dev1",
+    "environmentIdBase": "dev1",
+    "region": "us-east-1",
+    "environmentType": "DEVELOPMENT",
+    "awsAccountId": "681989517074",
+    "imageBatchSharedAccount": "125277160564.dkr.ecr.us-east-1.amazonaws.com/cobis/util/java-exec-from-s3",
+    "officialsUserPoolId": "us-east-1_1U2ky2y82",
+    "generalPurposeSubnetsId": "subnet-0a528e7553ffbf3d7,subnet-09b2cdfa6e7049a12",
+    "generalPurposeSecurityGroupsIds": "sg-055c4ae27248f64b7",
+    "databaseSecretArn": "arn:aws:secretsmanager:us-east-1:681989517074:secret:/dev1/ATM/database/credentials-VmbREQ",
+    "encryptionSecretName": "dev1/infra/encryption/key",
+    "transferFamilyUserIn": "user-atm",
+    "transferFamilyServerId": "s-e9ea3aa3105246208",
+    "extDemandDepositsEndPoint": "https://fodun5giw0.execute-api.us-east-1.amazonaws.com/v1/demand-deposits/executor",
+    "extDemandDepositsApiKey": "dev1-qwertyuioplkjhgfdsadev1"
+  },
+   "stack-outputs": [
+     "${BASE_ENVIRONMENT_ID}-BasePlatform",
+     "${BASE_ENVIRONMENT_ID}-cobis-core-auth",
+     "operations-base"
+   ],
+  "pipeline": {
+    "project": {
+      "module": "atm",
+      "project-key": "cobis-atm-serverless-service-aws",
+      "teams-webhook-url": "https://cobiscorp.webhook.office.com/webhookb2/908ef33d-333c-4e52-9b8d-f99384958437@a5e6fcaa-5535-41e3-8d08-2b6676750a3f/JenkinsCI/427888c932e0453386fb500d568a0e17/38ccebc1-db05-415d-bed6-83938d1a4c7c",
+      "backend-repo-url": "https://dev.azure.com/cobiscorp/COB/_git/cobis-atm-backend-aws",
+      "backend-branch": "develop"
+    },
+    "liquibase": {
+      "liquibase-s3-bucket": "${environmentIdBase}-cobis-cicd-core-resources-virginia-${awsAccountId}",
+      "liquibase-batch-job-queue": "${environmentIdBase}-cobis-gp-fg-environment-queue",
+      "liquibase-batch-job-definition": "${environmentIdBase}-liquibase-executor-fg-job-definition",
+      "liquibase-db-names": "cobis,cob_atm,cob_atm_his,cob_atm_cp,cob_atm_cp_his",
+      "liquibase-db-log-sufijo": "ATM",
+      "liquibase-deploy-enable": "true"
+    },
+    "deploy": {
+      "stack-name": "${environmentId}-atm",
+      "s3-bucket": "${environmentIdBase}-cobis-cicd-core-resources-virginia-${awsAccountId}",
+      "prefix": "${environmentId}",
+      "aws-default-region": "${region}",
+      "capabilities": "CAPABILITY_IAM CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM",
+      "non-confirm-change-set": "true",
+      "parameters": [
+        {
+          "parameterKey": "LambdaAuthorizer",
+          "parameterValue": "${${BASE_ENVIRONMENT_ID}-cobis-core-auth:LambdaAuthorizerName}"
+        },
+        {
+          "parameterKey": "Organization",
+          "parameterValue": "${${BASE_ENVIRONMENT_ID}-BasePlatform:Organization}"
+        },
+        {
+          "parameterKey": "Version",
+          "parameterValue": "0.1"
+        },
+        {
+          "parameterKey": "TenantId",
+          "parameterValue": "${${BASE_ENVIRONMENT_ID}-BasePlatform:TenantId}"
+        },
+        {
+          "parameterKey": "ProcessingType",
+          "parameterValue": "ONLINE"
+        },
+        {
+          "parameterKey": "ImageBatchSharedResourcesAccount",
+          "parameterValue": "${imageBatchSharedAccount}"
+        },
+        {
+          "parameterKey": "DaysRetention",
+          "parameterValue": 3
+        },
+        {
+          "parameterKey": "EnvironmentIdBase",
+          "parameterValue": "${environmentIdBase}"
+        },
+        {
+          "parameterKey": "EnvironmentType",
+          "parameterValue": "${environmentType}"
+        },
+        {
+          "parameterKey": "EnvironmentId",
+          "parameterValue": "${environmentId}"
+        },
+        {
+          "parameterKey": "RegionToDeploy",
+          "parameterValue": "${region}"
+        },
+        {
+          "parameterKey": "AwsAccountIdToDeploy",
+          "parameterValue": "${awsAccountId}"
+        },
+        {
+          "parameterKey": "UserPoolId",
+          "parameterValue": "${${BASE_ENVIRONMENT_ID}-cobis-core-auth:OfficialsUserPoolId}"
+        },
+        {
+          "parameterKey": "ValueApiKey",
+          "parameterValue": "${environmentIdBase}-qwertyuioplkjhgfyla5"
+        },
+        {
+          "parameterKey": "SecurityGroupIds",
+          "parameterValue": "${${BASE_ENVIRONMENT_ID}-BasePlatform:GeneralPurposeBackendSecurityGroupId}"
+        },
+        {
+          "parameterKey": "SubnetIds",
+          "parameterValue": "${${BASE_ENVIRONMENT_ID}-BasePlatform:GeneralPurposeBackendSubnetIds}"
+        },
+        {
+          "parameterKey": "DatabaseSecretArn",
+          "parameterValue": "${databaseSecretArn}"
+        },
+        {
+          "parameterKey": "EncryptionKeySecretName",
+          "parameterValue": "${encryptionSecretName}"
+        },
+        {
+          "parameterKey": "EcsTaskExecutionRole",
+          "parameterValue": "arn:aws:iam::${awsAccountId}:role/${environmentIdBase}-batch-task-execution-role"
+        },
+        {
+          "parameterKey": "AWSBatchServiceRole",
+          "parameterValue": "arn:aws:iam::${awsAccountId}:role/${environmentIdBase}-batch-compute-service-role"
+        },
+        {
+          "parameterKey": "ExtDemandDepositsApiKey",
+          "parameterValue": "${extDemandDepositsApiKey}"
+        },
+        {
+          "parameterKey": "ExtDemandDeposits",
+          "parameterValue": "${extDemandDepositsEndPoint}"
+        },
+        {
+          "parameterKey": "DbTarget",
+          "parameterValue": "master"
+        },
+        {
+          "parameterKey": "TimeZone",
+          "parameterValue": "America/Bogota"
+        },
+        {
+          "parameterKey": "Project",
+          "parameterValue": "CoreServerless"
+        },
+        {
+          "parameterKey": "Package",
+          "parameterValue": "COBIS_CORE_BANKING"
+        },
+        {
+          "parameterKey": "LoggingBucket",
+          "parameterValue": "${environmentIdBase}-baseplatform-serveraccesslogs-${awsAccountId}"
+        },
+        {
+          "parameterKey": "TransferFamilyUserIn",
+          "parameterValue": "${transferFamilyUserIn}"
+        },
+        {
+          "parameterKey": "TransferFamilyServerId",
+          "parameterValue": "${transferFamilyServerId}"
+        }
+      ]
+    }
+  }
+}'
+      ContentType: 'JSON'
