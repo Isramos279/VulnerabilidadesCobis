@@ -1,0 +1,1465 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: Esta plantilla crea los grupos de seguridad
+
+
+Parameters:
+ 
+  Organization:
+    Description: Component owner identifier
+    Type: String
+    Default: Cobiscorp
+  
+  Version:
+    Description: Base platform version
+    Type: String
+    Default: 1.0.0
+
+  EnvironmentType:
+    Description: Type of environment
+    Type: String
+    Default: Production
+
+  EnvironmentId:
+    Description:  Environment identifier
+    Type: String
+    Default: prd
+
+  TenantId:
+    Description:  Tenant identifier
+    Type: String
+    Default: t1
+
+  Project:
+    Description: Identifier of the project by which the component is created
+    Type: String
+    Default: Core Serverless
+  
+  Module:
+    Description : Base platform name
+    Type: String
+    Default:  Base platform
+  
+  Package:
+    Description: The identifier of the product package to which the component is associated
+    Type: String
+    Default: Cobis Core Banking
+  
+  ProcessingType:
+    Description: Identifier of the general processing type
+    Type: String
+    Default:  GENERAL
+
+  RdsEngineMode:
+    Description: Tipo de cluster a usar para el motor de base de datos
+    Type: String
+    Default: serverless
+
+  GenerateVpcEndpoints:
+    Description: Define si se desea crear o no el recurso de VPC Endpoint.
+    Type: String
+    Default: false
+
+  VPC:
+    Description: VPC Network referenciado de yaml network core
+    Type: String
+  
+  Mask:
+    Description: Mascara subnets
+    Type: String
+    Default: 16
+
+  SizeAvailabilityZones:
+    Description: Longitud de zona disponibilidad
+    Type: String
+    Default: 2
+
+  CIDRBlock:
+    Description: Bloque CIDR para el despliegue del Core Serverless Con Mascara 16
+    Type: String
+  
+  DeploySubnetsLoans:
+    Description: Indica si se debe desplegar o no las subredes públicas o privadas de proposito Loans
+    Type: String 
+  
+  DeploySubnetsChannels:
+    Description: Indica si se debe desplegar o no las subredes públicas o privadas de Channels
+    Type: String 
+  
+  DeploySubnetsDemandDepositsAccounts:
+    Description: Indica si se debe desplegar o no las subredes públicas o privadas de proposito Demand Deposits
+    Type: String 
+  
+  DeploySubnetsTradeInvestments:
+    Description: Indica si se debe desplegar o no las subredes públicas o privadas de Trade Investments
+    Type: String 
+  
+  CidrIpInboundPublicSubnets:
+    Description: Bloque CIDR para los security group de las subredes publicas
+    Type: String
+
+  ApplicationsPortsBackPri:
+    Description: Rango de puertos para security group back pri
+    Type: String
+
+  ArtifactRepositoryCidrIpPort:
+    Description : "Bloque de Ips y puerto de repositorio de artefactos(nexus) utilizado para generar permisos de salida requeridos por el Job Security de Serenity, Primer valor: Ip, Segundo valor: Puerto. Si el parametro se envia sin valor no se genera ningun acceso."
+    Type: String
+
+Mappings:
+  RegionMap:
+    us-west-1:
+      S3PrefixListId: pl-6ba54002
+      DynamodbPrefixListId: pl-6ea54007    
+    us-west-2:
+      S3PrefixListId: pl-68a54001
+      DynamodbPrefixListId: pl-00a54069
+    us-east-1:
+      S3PrefixListId: pl-63a5400a
+      DynamodbPrefixListId: pl-02cd2c6b
+    us-east-2:
+      S3PrefixListId: pl-7ba54012
+      DynamodbPrefixListId: pl-4ca54025
+    eu-west-1:
+      S3PrefixListId: pl-6da54004
+      DynamodbPrefixListId: pl-6fa54006
+    eu-west-2:
+      S3PrefixListId: pl-7ca54015
+      DynamodbPrefixListId: pl-b3a742da
+    
+Conditions:
+  isServerless: !Equals [ !Ref RdsEngineMode , serverless ]
+  isVpcEndpoints: !Equals [ !Ref GenerateVpcEndpoints , true ]
+  isAZ3: !Equals [ !Ref SizeAvailabilityZones  , 3 ]
+  
+  isDeployPrivateSubnetLoansBackPri: !Equals [ !Select [2, !Split [":", !Ref DeploySubnetsLoans]] , "true" ]
+  isVPCEndpointsisDeployPrivateSubnetLoansBackPri: !And
+    - !Condition isVpcEndpoints
+    - !Condition isDeployPrivateSubnetLoansBackPri
+  
+  isDeployPrivateSubnetChannelBackPri: !Equals [ !Select [2, !Split [":", !Ref DeploySubnetsChannels]] , "true" ]
+
+  isDeployPrivateSubnetDemandDepositsBackPri: !Equals [ !Select [2, !Split [":", !Ref DeploySubnetsDemandDepositsAccounts]] , "true" ]
+  isVPCEndpointsisDeployPrivateSubnetDemandDepositsBackPri: !And
+    - !Condition isVpcEndpoints
+    - !Condition isDeployPrivateSubnetDemandDepositsBackPri
+
+  isDeployPrivateSubnetTiBackPri: !Equals [ !Select [2, !Split [":", !Ref DeploySubnetsTradeInvestments]] , "true" ]
+  isVPCEndpointsisDeployPrivateSubnetTiBackPri: !And
+    - !Condition isVpcEndpoints
+    - !Condition isDeployPrivateSubnetTiBackPri
+  
+  IsArtifactRepositoryEnable: !And
+    - !Not [!Equals ["", !Ref ArtifactRepositoryCidrIpPort]]
+    - !Not [!Equals ["PRODUCTION", !Ref EnvironmentType]]
+    - !Not [!Equals ["Production", !Ref EnvironmentType]]
+
+Resources:  
+  CoreBastionSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPC
+      GroupDescription: Grupo de seguridad bastion
+      GroupName: !Join ['-', [!Ref EnvironmentId , "core-bastion-server-sg"]]
+      Tags:
+        - Key: Name
+          Value: !Join ['-', [!Ref EnvironmentId , "core-bastion-server-sg"]]
+        - Key: PROJECT
+          Value: !Ref Project
+        - Key: ENVIRONMENT_TYPE
+          Value: !Ref EnvironmentType
+        - Key: TENANT_ID
+          Value: !Ref TenantId
+        - Key: ORGANIZATION
+          Value: !Ref Organization
+        - Key: ENVIRONMENT_ID
+          Value: !Ref EnvironmentId
+        - Key: MODULE
+          Value: !Ref Module
+        - Key: PACKAGE
+          Value: !Ref Package
+        - Key: VERSION
+          Value: !Ref Version
+        - Key: PROCESSING_TYPE
+          Value: !Ref ProcessingType
+  
+  GeneralPurposeRdsSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPC
+      GroupDescription: Grupo de seguridad de base de datos
+      GroupName: !Join ['-', [!Ref EnvironmentId , "gp-database-private-zone-sg"]]
+      SecurityGroupEgress: #Elimina el Default Egress
+      - CidrIp: !Join ['/', ['127.0.0.1' , !Ref Mask]]  
+        IpProtocol: "-1"
+      Tags:
+        - Key: Name
+          Value: !Join ['-', [!Ref EnvironmentId , "gp-database-private-zone-sg"]]
+        - Key: PROJECT
+          Value: !Ref Project
+        - Key: ENVIRONMENT_TYPE
+          Value: !Ref EnvironmentType
+        - Key: TENANT_ID
+          Value: !Ref TenantId
+        - Key: ORGANIZATION
+          Value: !Ref Organization
+        - Key: ENVIRONMENT_ID
+          Value: !Ref EnvironmentId
+        - Key: MODULE
+          Value: !Ref Module
+        - Key: PACKAGE
+          Value: !Ref Package
+        - Key: VERSION
+          Value: !Ref Version
+        - Key: PROCESSING_TYPE
+          Value: !Ref ProcessingType
+
+  CoreBastionRDSOutboundRule:    
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      FromPort: !If [isServerless, 3306,3333 ]
+      IpProtocol: tcp
+      ToPort: !If [isServerless, 3306,3333 ]
+      DestinationSecurityGroupId:
+        Fn::GetAtt:
+        - GeneralPurposeRdsSecurityGroup
+        - GroupId
+      GroupId:
+        Fn::GetAtt:
+        - CoreBastionSecurityGroup
+        - GroupId
+
+  CoreBastionInboundRule:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      CidrIp: !Ref CidrIpInboundPublicSubnets
+      FromPort: 2222
+      IpProtocol: tcp
+      ToPort: 2222         
+      GroupId:
+        Fn::GetAtt:
+        - CoreBastionSecurityGroup
+        - GroupId     
+ 
+  GpBackEndPrivateZoneSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPC
+      GroupDescription: Grupo de seguridad backend zona privada
+      GroupName: !Join ['-', [!Ref EnvironmentId , "gp-back-end-private-zone-sg"]]
+      SecurityGroupIngress:
+      - CidrIp: !Ref CIDRBlock 
+        FromPort: 443
+        IpProtocol: tcp
+        ToPort: 443
+      SecurityGroupEgress:
+      - CidrIp: !Ref CIDRBlock 
+        FromPort: !If [isServerless, 3306,3333 ]
+        IpProtocol: tcp
+        ToPort: !If [isServerless, 3306,3333 ]
+      - CidrIp: !Ref CIDRBlock
+        FromPort: !Select [0, !Split [":", !Ref ApplicationsPortsBackPri]]
+        IpProtocol: tcp
+        ToPort: !Select [1, !Split [":", !Ref ApplicationsPortsBackPri]]
+      Tags:
+        - Key: Name
+          Value: !Join ['-', [!Ref EnvironmentId , "gp-back-end-private-zone-sg"]]
+        - Key: PROJECT
+          Value: !Ref Project
+        - Key: ENVIRONMENT_TYPE
+          Value: !Ref EnvironmentType
+        - Key: TENANT_ID
+          Value: !Ref TenantId
+        - Key: ORGANIZATION
+          Value: !Ref Organization
+        - Key: ENVIRONMENT_ID
+          Value: !Ref EnvironmentId
+        - Key: MODULE
+          Value: !Ref Module
+        - Key: PACKAGE
+          Value: !Ref Package
+        - Key: VERSION
+          Value: !Ref Version
+        - Key: PROCESSING_TYPE
+          Value: !Ref ProcessingType
+
+  #Este permiso es utilizado por Job de Serenity para acceder al repositorio de artefactos
+  GpBackEndPrivateZoneSecurityGroupOutboundRule:    
+    Type: AWS::EC2::SecurityGroupEgress
+    Condition: IsArtifactRepositoryEnable
+    Properties:
+      CidrIp: !Select [0, !Split [":", !Ref ArtifactRepositoryCidrIpPort]]
+      FromPort: !Select [1, !Split [":", !Ref ArtifactRepositoryCidrIpPort]]
+      ToPort: !Select [1, !Split [":", !Ref ArtifactRepositoryCidrIpPort]]
+      IpProtocol: tcp
+      GroupId:
+        Fn::GetAtt:
+        - GpBackEndPrivateZoneSecurityGroup
+        - GroupId
+
+  GpBackEndPrivateZoneS3OutboundRule:
+    Type: AWS::EC2::SecurityGroupEgress
+    Condition: isVpcEndpoints 
+    Properties:
+      FromPort: 443
+      IpProtocol: tcp
+      ToPort: 443      
+      DestinationPrefixListId: !FindInMap [RegionMap, !Ref "AWS::Region", S3PrefixListId]
+      GroupId:
+        Fn::GetAtt:
+        - GpBackEndPrivateZoneSecurityGroup
+        - GroupId
+  
+  GpBackEndPrivateZoneDynamodbOutboundRule:
+    Type: AWS::EC2::SecurityGroupEgress
+    Condition: isVpcEndpoints 
+    Properties:
+      FromPort: 443
+      IpProtocol: tcp
+      ToPort: 443
+      DestinationPrefixListId: !FindInMap [RegionMap, !Ref "AWS::Region", DynamodbPrefixListId]
+      GroupId:
+        Fn::GetAtt:
+        - GpBackEndPrivateZoneSecurityGroup
+        - GroupId
+  
+  GpApisAndFrontendPublicZoneSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPC
+      GroupDescription: Grupo seguridad apis y frontend zona publica  
+      GroupName: !Join ['-', [!Ref EnvironmentId , "gp-apis-and-frontend-public-zone-sg"]]
+      Tags:
+        - Key: Name
+          Value: !Join ['-', [!Ref EnvironmentId , "gp-apis-and-frontend-public-zone-sg"]]
+        - Key: PROJECT
+          Value: !Ref Project
+        - Key: ENVIRONMENT_TYPE
+          Value: !Ref EnvironmentType
+        - Key: TENANT_ID
+          Value: !Ref TenantId
+        - Key: ORGANIZATION
+          Value: !Ref Organization
+        - Key: ENVIRONMENT_ID
+          Value: !Ref EnvironmentId
+        - Key: MODULE
+          Value: !Ref Module
+        - Key: PACKAGE
+          Value: !Ref Package
+        - Key: VERSION
+          Value: !Ref Version
+        - Key: PROCESSING_TYPE
+          Value: !Ref ProcessingType
+
+  GpApisAndFrontendPublicZoneInboundRule:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      CidrIp: !Ref CidrIpInboundPublicSubnets
+      FromPort: 443
+      IpProtocol: tcp
+      ToPort: 443
+      GroupId:
+        Fn::GetAtt:
+        - GpApisAndFrontendPublicZoneSecurityGroup
+        - GroupId
+
+  GpApisAndFrontendPublicZoneOutboundRuleToPrivate:    
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      FromPort: 8080
+      IpProtocol: tcp
+      ToPort: 8080
+      DestinationSecurityGroupId:
+        Fn::GetAtt:
+        - GpApisAndFrontendPrivateZoneSecurityGroup
+        - GroupId
+      GroupId:
+        Fn::GetAtt:
+        - GpApisAndFrontendPublicZoneSecurityGroup
+        - GroupId
+
+  GpApisAndFrontendPrivateZoneSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPC
+      GroupDescription: Grupo seguridad apis y frontend zona privada      
+      GroupName: !Join ['-', [!Ref EnvironmentId , "gp-apis-and-frontend-private-zone-sg"]]
+      Tags:
+        - Key: Name
+          Value: !Join ['-', [!Ref EnvironmentId , "gp-apis-and-frontend-private-zone-sg"]]
+        - Key: PROJECT
+          Value: !Ref Project
+        - Key: ENVIRONMENT_TYPE
+          Value: !Ref EnvironmentType
+        - Key: TENANT_ID
+          Value: !Ref TenantId
+        - Key: ORGANIZATION
+          Value: !Ref Organization
+        - Key: ENVIRONMENT_ID
+          Value: !Ref EnvironmentId
+        - Key: MODULE
+          Value: !Ref Module
+        - Key: PACKAGE
+          Value: !Ref Package
+        - Key: VERSION
+          Value: !Ref Version
+        - Key: PROCESSING_TYPE
+          Value: !Ref ProcessingType
+
+  GpApisAndFrontendPrivateZoneInRule:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      FromPort: 8080
+      IpProtocol: tcp
+      ToPort: 8080
+      SourceSecurityGroupId:
+        Fn::GetAtt:
+        - GpApisAndFrontendPublicZoneSecurityGroup
+        - GroupId
+      GroupId:
+        Fn::GetAtt:
+        - GpApisAndFrontendPrivateZoneSecurityGroup
+        - GroupId
+
+  GpApisAndFrontendPrivateZoneOutboundRule:    
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      CidrIp: !Ref CIDRBlock
+      FromPort: 443
+      IpProtocol: tcp
+      ToPort: 443
+      GroupId:
+        Fn::GetAtt:
+        - GpApisAndFrontendPrivateZoneSecurityGroup
+        - GroupId
+  
+  GpApisAndFrontendPrivateZoneOutboundRule2:    
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:      
+      FromPort: 8085
+      IpProtocol: tcp
+      ToPort: 8097
+      DestinationSecurityGroupId:
+        Fn::GetAtt:
+        - GpBackEndXsellSecurityGroup     
+        - GroupId
+      GroupId:
+        Fn::GetAtt:
+        - GpApisAndFrontendPrivateZoneSecurityGroup
+        - GroupId   
+      
+  GpApisAndFrontendPublicZoneOutboundRule:    
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:     
+      FromPort: 8080
+      IpProtocol: tcp
+      ToPort: 8080
+      DestinationSecurityGroupId: 
+        Fn::GetAtt:
+        - GpApisAndFrontendPrivateZoneSecurityGroup
+        - GroupId     
+      GroupId:
+        Fn::GetAtt:
+        - GpApisAndFrontendPublicZoneSecurityGroup
+        - GroupId 
+
+  GpGlueConnectionSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPC
+      GroupDescription: Grupo seguridad Glue      
+      GroupName: !Join ['-', [!Ref EnvironmentId , "gp-glue-connection-sg"]]
+      Tags:
+        - Key: Name
+          Value: !Join ['-', [!Ref EnvironmentId , "gp-glue-connection-sg"]]
+        - Key: PROJECT
+          Value: !Ref Project
+        - Key: ENVIRONMENT_TYPE
+          Value: !Ref EnvironmentType
+        - Key: TENANT_ID
+          Value: !Ref TenantId
+        - Key: ORGANIZATION
+          Value: !Ref Organization
+        - Key: ENVIRONMENT_ID
+          Value: !Ref EnvironmentId
+        - Key: MODULE
+          Value: !Ref Module
+        - Key: PACKAGE
+          Value: !Ref Package
+        - Key: VERSION
+          Value: !Ref Version
+        - Key: PROCESSING_TYPE
+          Value: !Ref ProcessingType 
+
+  GpGlueConnectionOutboundRule:    
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      CidrIp: 10.128.0.0/16
+      FromPort: 0
+      IpProtocol: -1
+      ToPort: 0
+      GroupId:
+        Fn::GetAtt:
+        - GpGlueConnectionSecurityGroup
+        - GroupId  
+
+  GpGlueConnectionInboundRule:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      IpProtocol: tcp
+      FromPort: 0
+      ToPort: 65535
+      SourceSecurityGroupId: 
+        Fn::GetAtt:
+        - GpGlueConnectionSecurityGroup
+        - GroupId     
+      GroupId:
+        Fn::GetAtt:
+        - GpGlueConnectionSecurityGroup
+        - GroupId 
+
+  CoreVpcEndpointSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPC
+      GroupDescription: Grupo seguridad VPC endpoint    
+      SecurityGroupEgress: #Elimina el Default Egress
+      - CidrIp: !Join ['/', ['127.0.0.1' , !Ref Mask]]  
+        IpProtocol: "-1"  
+      GroupName: !Join ['-', [!Ref EnvironmentId , "core-vpc-endpoints-sg"]]
+      Tags:
+        - Key: Name
+          Value: !Join ['-', [!Ref EnvironmentId , "core-vpc-endpoints-sg"]]
+        - Key: PROJECT
+          Value: !Ref Project
+        - Key: ENVIRONMENT_TYPE
+          Value: !Ref EnvironmentType
+        - Key: TENANT_ID
+          Value: !Ref TenantId
+        - Key: ORGANIZATION
+          Value: !Ref Organization
+        - Key: ENVIRONMENT_ID
+          Value: !Ref EnvironmentId
+        - Key: MODULE
+          Value: !Ref Module
+        - Key: PACKAGE
+          Value: !Ref Package
+        - Key: VERSION
+          Value: !Ref Version
+        - Key: PROCESSING_TYPE
+          Value: !Ref ProcessingType 
+
+  CoreVpcEndpointInboundRule:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      CidrIp: !Ref CIDRBlock 
+      FromPort: 443
+      IpProtocol: tcp
+      ToPort: 443
+      GroupId:
+        Fn::GetAtt:
+        - CoreVpcEndpointSecurityGroup
+        - GroupId   
+  
+  GpBackEndXsellSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPC
+      GroupDescription: Grupo seguridad Xsell  
+      GroupName: !Join ['-', [!Ref EnvironmentId , "gp-back-end-xsell-sg"]]    
+      Tags:
+        - Key: Name
+          Value: !Join ['-', [!Ref EnvironmentId , "gp-back-end-xsell-sg"]]
+        - Key: PROJECT
+          Value: !Ref Project
+        - Key: ENVIRONMENT_TYPE
+          Value: !Ref EnvironmentType
+        - Key: TENANT_ID
+          Value: !Ref TenantId
+        - Key: ORGANIZATION
+          Value: !Ref Organization
+        - Key: ENVIRONMENT_ID
+          Value: !Ref EnvironmentId
+        - Key: MODULE
+          Value: !Ref Module
+        - Key: PACKAGE
+          Value: !Ref Package
+        - Key: VERSION
+          Value: !Ref Version
+        - Key: PROCESSING_TYPE
+          Value: !Ref ProcessingType 
+  
+  GpBackEndXsellAdminInboundRule:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      CidrIp: !Ref CIDRBlock 
+      FromPort: 8087
+      IpProtocol: tcp
+      ToPort: 8087
+      GroupId:
+        Fn::GetAtt:
+        - GpBackEndXsellSecurityGroup
+        - GroupId
+
+  GpBackEndXsellBrmsInboundRule:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      CidrIp: !Ref CIDRBlock 
+      FromPort: 8086
+      IpProtocol: tcp
+      ToPort: 8086
+      GroupId:
+        Fn::GetAtt:
+        - GpBackEndXsellSecurityGroup
+        - GroupId 
+
+  GpBackEndXsellBpmInboundRule:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      CidrIp: !Ref CIDRBlock 
+      FromPort: 8089
+      IpProtocol: tcp
+      ToPort: 8089
+      GroupId:
+        Fn::GetAtt:
+        - GpBackEndXsellSecurityGroup
+        - GroupId 
+
+  GpBackEndXsellFpmInboundRule:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      CidrIp: !Ref CIDRBlock 
+      FromPort: 8085
+      IpProtocol: tcp
+      ToPort: 8085
+      GroupId:
+        Fn::GetAtt:
+        - GpBackEndXsellSecurityGroup
+        - GroupId
+  
+  GpBackEndXsellAccountingInboundRule:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      CidrIp: !Ref CIDRBlock 
+      FromPort: 8090
+      IpProtocol: tcp
+      ToPort: 8090
+      GroupId:
+        Fn::GetAtt:
+        - GpBackEndXsellSecurityGroup
+        - GroupId
+
+  GpBackEndXsellVccInboundRule:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      CidrIp: !Ref CIDRBlock 
+      FromPort: 8091
+      IpProtocol: tcp
+      ToPort: 8091
+      GroupId:
+        Fn::GetAtt:
+        - GpBackEndXsellSecurityGroup
+        - GroupId
+  
+  GpBackEndXsellLoansInboundRule:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      CidrIp: !Ref CIDRBlock 
+      FromPort: 8088
+      IpProtocol: tcp
+      ToPort: 8088
+      GroupId:
+        Fn::GetAtt:
+        - GpBackEndXsellSecurityGroup
+        - GroupId 
+  
+  GpBackEndXsellBpInboundRule:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      CidrIp: !Ref CIDRBlock
+      FromPort: 8092
+      IpProtocol: tcp
+      ToPort: 8092
+      GroupId:
+        Fn::GetAtt:
+        - GpBackEndXsellSecurityGroup
+        - GroupId
+
+  GpBackEndXsellCstInboundRule:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      CidrIp: !Ref CIDRBlock
+      FromPort: 8093
+      IpProtocol: tcp
+      ToPort: 8093
+      GroupId:
+        Fn::GetAtt:
+        - GpBackEndXsellSecurityGroup
+        - GroupId
+  
+  GpBackEndXsellCreditbureauInboundRule:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      CidrIp: !Ref CIDRBlock
+      FromPort: 8094
+      IpProtocol: tcp
+      ToPort: 8094
+      GroupId:
+        Fn::GetAtt:
+        - GpBackEndXsellSecurityGroup
+        - GroupId
+ 
+  GpBackEndXsellColInboundRule:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      CidrIp: !Ref CIDRBlock
+      FromPort: 8095
+      IpProtocol: tcp
+      ToPort: 8095
+      GroupId:
+        Fn::GetAtt:
+        - GpBackEndXsellSecurityGroup
+        - GroupId  
+  
+  GpBackEndXsellDdaInboundRule:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      CidrIp: !Ref CIDRBlock
+      FromPort: 8096
+      IpProtocol: tcp
+      ToPort: 8096
+      GroupId:
+        Fn::GetAtt:
+        - GpBackEndXsellSecurityGroup
+        - GroupId
+  
+  GpBackEndXsellManagementServiceInboundRule:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      CidrIp: !Ref CIDRBlock
+      FromPort: 8098
+      IpProtocol: tcp
+      ToPort: 8098
+      GroupId:
+        Fn::GetAtt:
+        - GpBackEndXsellSecurityGroup
+        - GroupId
+
+  GpBackEndXsellLoansOrganizationInboundRule:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      CidrIp: !Ref CIDRBlock
+      FromPort: 8097
+      IpProtocol: tcp
+      ToPort: 8097
+      GroupId:
+        Fn::GetAtt:
+        - GpBackEndXsellSecurityGroup
+        - GroupId      
+  
+  GpBackEndXsellInboundRule:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      CidrIp: !Ref CIDRBlock
+      FromPort: 443
+      IpProtocol: tcp
+      ToPort: 443
+      GroupId:
+        Fn::GetAtt:
+        - GpBackEndXsellSecurityGroup
+        - GroupId
+  
+  GpBackEndXsellOutboundRule:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      CidrIp: !Ref CIDRBlock
+      FromPort: 51678
+      IpProtocol: tcp
+      ToPort: 51680
+      GroupId:
+        Fn::GetAtt:
+        - GpBackEndXsellSecurityGroup
+        - GroupId
+
+  GpBackEndXsellOutboundRule2:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      CidrIp: !Ref CIDRBlock
+      FromPort: 2375
+      IpProtocol: tcp
+      ToPort: 2376
+      GroupId:
+        Fn::GetAtt:
+        - GpBackEndXsellSecurityGroup
+        - GroupId
+
+  GpBackEndXsellOutboundRule3:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      CidrIp: !Ref CIDRBlock
+      FromPort: !Select [0, !Split [":", !Ref ApplicationsPortsBackPri]]
+      IpProtocol: tcp
+      ToPort: !Select [1, !Split [":", !Ref ApplicationsPortsBackPri]]
+      GroupId:
+        Fn::GetAtt:
+        - GpBackEndXsellSecurityGroup
+        - GroupId
+
+  GpBackEndXsellOutboundRule4:
+      Type: AWS::EC2::SecurityGroupEgress
+      Properties:
+        CidrIp: 10.128.0.0/16
+        FromPort: 443
+        IpProtocol: tcp
+        ToPort: 443
+        GroupId:
+          Fn::GetAtt:
+          - GpBackEndXsellSecurityGroup
+          - GroupId
+
+  GpBackEndXsellOutboundRule5:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      CidrIp: !Ref CIDRBlock
+      FromPort: !If [isServerless, 3306,3333 ]
+      IpProtocol: tcp
+      ToPort: !If [isServerless, 3306,3333 ]
+      GroupId:
+        Fn::GetAtt:
+        - GpBackEndXsellSecurityGroup
+        - GroupId
+
+  GpBackEndXsellToVcpEndPointOutboundRule:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      FromPort: 443
+      IpProtocol: tcp
+      ToPort: 443
+      DestinationSecurityGroupId: 
+        Fn::GetAtt:
+        - CoreVpcEndpointSecurityGroup
+        - GroupId  
+      GroupId:
+        Fn::GetAtt:
+        - GpBackEndXsellSecurityGroup
+        - GroupId
+  
+  GpBackEndXsellToS3VcpEndPointOutboundRule:
+    Type: AWS::EC2::SecurityGroupEgress
+    Condition: isVpcEndpoints 
+    Properties:
+      FromPort: 443
+      IpProtocol: tcp
+      ToPort: 443      
+      DestinationPrefixListId: !FindInMap [RegionMap, !Ref "AWS::Region", S3PrefixListId]        
+      GroupId:
+        Fn::GetAtt:
+        - GpBackEndXsellSecurityGroup
+        - GroupId
+
+  GpBackEndXsellToDynamodbVcpEndPointOutboundRule:
+    Type: AWS::EC2::SecurityGroupEgress
+    Condition: isVpcEndpoints 
+    Properties:
+      FromPort: 443
+      IpProtocol: tcp
+      ToPort: 443      
+      DestinationPrefixListId: !FindInMap [RegionMap, !Ref "AWS::Region", DynamodbPrefixListId]        
+      GroupId:
+        Fn::GetAtt:
+        - GpBackEndXsellSecurityGroup
+        - GroupId
+  
+  DdBackPrivateSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Condition: isDeployPrivateSubnetDemandDepositsBackPri
+    Properties:
+      VpcId: !Ref VPC
+      GroupDescription: Grupo seguridad back private  
+      GroupName: !Join ['-', [!Ref EnvironmentId , "dda-back-end-private-zone-sg"]]
+      Tags:
+        - Key: Name
+          Value: !Join ['-', [!Ref EnvironmentId , "dda-back-end-private-zone-sg"]]
+        - Key: PROJECT
+          Value: !Ref Project
+        - Key: ENVIRONMENT_TYPE
+          Value: !Ref EnvironmentType
+        - Key: TENANT_ID
+          Value: !Ref TenantId
+        - Key: ORGANIZATION
+          Value: !Ref Organization
+        - Key: ENVIRONMENT_ID
+          Value: !Ref EnvironmentId
+        - Key: MODULE
+          Value: !Ref Module
+        - Key: PACKAGE
+          Value: !Ref Package
+        - Key: VERSION
+          Value: !Ref Version
+        - Key: PROCESSING_TYPE
+          Value: !Ref ProcessingType
+  
+  DdBackPrivateInboundRule:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Condition: isDeployPrivateSubnetDemandDepositsBackPri
+    Properties:
+      CidrIp: !Ref CIDRBlock
+      FromPort: 443
+      IpProtocol: tcp
+      ToPort: 443         
+      GroupId:
+        Fn::GetAtt:
+        - DdBackPrivateSecurityGroup
+        - GroupId
+
+  DdBackPrivateOutboundRule:
+    Type: AWS::EC2::SecurityGroupEgress
+    Condition: isDeployPrivateSubnetDemandDepositsBackPri    
+    Properties:
+      FromPort: !If [isServerless, 3306,3333 ]
+      IpProtocol: tcp
+      ToPort: !If [isServerless, 3306,3333 ]
+      DestinationSecurityGroupId:
+        Fn::GetAtt:
+        - GeneralPurposeRdsSecurityGroup
+        - GroupId
+      GroupId:
+        Fn::GetAtt:
+        - DdBackPrivateSecurityGroup
+        - GroupId
+
+  DdBackPrivateOutboundRule2:
+    Type: AWS::EC2::SecurityGroupEgress
+    Condition: isDeployPrivateSubnetDemandDepositsBackPri
+    Properties:
+      FromPort: 443
+      IpProtocol: tcp
+      ToPort: 443
+      CidrIp: !Ref CIDRBlock         
+      GroupId:
+        Fn::GetAtt:
+        - DdBackPrivateSecurityGroup
+        - GroupId
+  
+  DdBackPrivateToS3VcpEndPointOutboundRule:    
+    Type: AWS::EC2::SecurityGroupEgress
+    Condition: isVPCEndpointsisDeployPrivateSubnetDemandDepositsBackPri 
+    Properties:
+      FromPort: 443
+      IpProtocol: tcp
+      ToPort: 443
+      DestinationPrefixListId: !FindInMap [RegionMap, !Ref "AWS::Region", S3PrefixListId]      
+      GroupId:
+        Fn::GetAtt:
+        - DdBackPrivateSecurityGroup
+        - GroupId
+
+  DdBackPrivateToDynamodbVcpEndPointOutboundRule:    
+    Type: AWS::EC2::SecurityGroupEgress
+    Condition: isVPCEndpointsisDeployPrivateSubnetDemandDepositsBackPri 
+    Properties:
+      FromPort: 443
+      IpProtocol: tcp
+      ToPort: 443      
+      DestinationPrefixListId: !FindInMap [RegionMap, !Ref "AWS::Region", DynamodbPrefixListId]        
+      GroupId:
+        Fn::GetAtt:
+        - DdBackPrivateSecurityGroup
+        - GroupId
+
+  LnsBackPrivateSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Condition: isDeployPrivateSubnetLoansBackPri
+    Properties:
+      VpcId: !Ref VPC
+      GroupDescription: Grupo seguridad Loan back private     
+      GroupName: !Join ['-', [!Ref EnvironmentId , "lns-back-end-private-zone-sg"]]
+      Tags:
+        - Key: Name
+          Value: !Join ['-', [!Ref EnvironmentId , "lns-back-end-private-zone-sg"]]
+        - Key: PROJECT
+          Value: !Ref Project
+        - Key: ENVIRONMENT_TYPE
+          Value: !Ref EnvironmentType
+        - Key: TENANT_ID
+          Value: !Ref TenantId
+        - Key: ORGANIZATION
+          Value: !Ref Organization
+        - Key: ENVIRONMENT_ID
+          Value: !Ref EnvironmentId
+        - Key: MODULE
+          Value: !Ref Module
+        - Key: PACKAGE
+          Value: !Ref Package
+        - Key: VERSION
+          Value: !Ref Version
+        - Key: PROCESSING_TYPE
+          Value: !Ref ProcessingType
+  
+  LnsBackPrivateInboundRule:    
+    Condition: isDeployPrivateSubnetLoansBackPri
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      CidrIp: !Ref CIDRBlock
+      FromPort: 443
+      IpProtocol: tcp
+      ToPort: 443         
+      GroupId:
+        Fn::GetAtt:
+        - LnsBackPrivateSecurityGroup
+        - GroupId
+
+  LnsBackPrivateOutboundRule:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      FromPort: !If [isServerless, 3306,3333 ]
+      IpProtocol: tcp
+      ToPort: !If [isServerless, 3306,3333 ]
+      DestinationSecurityGroupId:
+        Fn::GetAtt:
+        - GeneralPurposeRdsSecurityGroup
+        - GroupId
+      GroupId:
+        Fn::GetAtt:
+        - LnsBackPrivateSecurityGroup
+        - GroupId
+
+  LnsBackPrivateOutboundRule2:
+    Condition: isDeployPrivateSubnetLoansBackPri
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      FromPort: 443
+      IpProtocol: tcp
+      ToPort: 443
+      CidrIp: 10.128.0.0/16         
+      GroupId:
+        Fn::GetAtt:
+        - LnsBackPrivateSecurityGroup
+        - GroupId
+  
+  LnsBackPrivateToS3VcpEndPointOutboundRule:    
+    Type: AWS::EC2::SecurityGroupEgress
+    Condition: isVPCEndpointsisDeployPrivateSubnetLoansBackPri 
+    Properties:
+      FromPort: 443
+      IpProtocol: tcp
+      ToPort: 443
+      DestinationPrefixListId: !FindInMap [RegionMap, !Ref "AWS::Region", S3PrefixListId]       
+      GroupId:
+        Fn::GetAtt:
+        - LnsBackPrivateSecurityGroup
+        - GroupId
+
+  LnsBackPrivateToDynamodbVcpEndPointOutboundRule:    
+    Type: AWS::EC2::SecurityGroupEgress
+    Condition: isVPCEndpointsisDeployPrivateSubnetLoansBackPri 
+    Properties:
+      FromPort: 443
+      IpProtocol: tcp
+      ToPort: 443
+      DestinationPrefixListId: !FindInMap [RegionMap, !Ref "AWS::Region", DynamodbPrefixListId]                
+      GroupId:
+        Fn::GetAtt:
+        - LnsBackPrivateSecurityGroup
+        - GroupId
+  
+  GeneralPurposeRdsToCoreBastionInboundRule:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      FromPort: !If [isServerless, 3306,3333 ]
+      IpProtocol: tcp
+      ToPort: !If [isServerless, 3306,3333 ]
+      SourceSecurityGroupId: 
+        Fn::GetAtt:
+        - CoreBastionSecurityGroup
+        - GroupId  
+      GroupId:
+        Fn::GetAtt:
+        - GeneralPurposeRdsSecurityGroup
+        - GroupId
+
+  GeneralPurposeRdsToGpBackInboundRuleAZ1:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      FromPort: !If [isServerless, 3306,3333 ]
+      IpProtocol: tcp
+      ToPort: !If [isServerless, 3306,3333 ]
+      CidrIp: !ImportValue
+        "Fn::Sub" : ${EnvironmentId}-BasePlatform-CidrPrivateSubnetBackPriAZ1
+      GroupId:
+        Fn::GetAtt:
+        - GeneralPurposeRdsSecurityGroup
+        - GroupId
+
+  GeneralPurposeRdsToGpBackInboundRuleAZ2:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      FromPort: !If [isServerless, 3306,3333 ]
+      IpProtocol: tcp
+      ToPort: !If [isServerless, 3306,3333 ]
+      CidrIp: !ImportValue
+        "Fn::Sub" : ${EnvironmentId}-BasePlatform-CidrPrivateSubnetBackPriAZ2
+      GroupId:
+        Fn::GetAtt:
+        - GeneralPurposeRdsSecurityGroup
+        - GroupId
+        
+  GeneralPurposeRdsToGpBackInboundRuleAZ3:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Condition: isAZ3
+    Properties:
+      FromPort: !If [isServerless, 3306,3333 ]
+      IpProtocol: tcp
+      ToPort: !If [isServerless, 3306,3333 ]
+      CidrIp: !ImportValue
+        "Fn::Sub" : ${EnvironmentId}-BasePlatform-CidrPrivateSubnetBackPriAZ3
+      GroupId:
+        Fn::GetAtt:
+        - GeneralPurposeRdsSecurityGroup
+        - GroupId
+  
+  GeneralPurposeRdsToDdaBackInboundRuleAZ1:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      FromPort: !If [isServerless, 3306,3333 ]
+      IpProtocol: tcp
+      ToPort: !If [isServerless, 3306,3333 ]
+      CidrIp: !ImportValue
+        "Fn::Sub" : ${EnvironmentId}-BasePlatform-CidrPrivateSubnetDdaBackPriAZ1
+      GroupId:
+        Fn::GetAtt:
+        - GeneralPurposeRdsSecurityGroup
+        - GroupId
+
+  GeneralPurposeRdsToDdaBackInboundRuleAZ2:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      FromPort: !If [isServerless, 3306,3333 ]
+      IpProtocol: tcp
+      ToPort: !If [isServerless, 3306,3333 ]
+      CidrIp: !ImportValue
+        "Fn::Sub" : ${EnvironmentId}-BasePlatform-CidrPrivateSubnetDdaBackPriAZ2
+      GroupId:
+        Fn::GetAtt:
+        - GeneralPurposeRdsSecurityGroup
+        - GroupId
+        
+  GeneralPurposeRdsToDdaBackInboundRuleAZ3:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Condition: isAZ3
+    Properties:
+      FromPort: !If [isServerless, 3306,3333 ]
+      IpProtocol: tcp
+      ToPort: !If [isServerless, 3306,3333 ]
+      CidrIp: !ImportValue
+        "Fn::Sub" : ${EnvironmentId}-BasePlatform-CidrPrivateSubnetLnsBackPriAZ3
+      GroupId:
+        Fn::GetAtt:
+        - GeneralPurposeRdsSecurityGroup
+        - GroupId
+
+  GeneralPurposeRdsToLnsBackInboundRuleAZ1:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      FromPort: !If [isServerless, 3306,3333 ]
+      IpProtocol: tcp
+      ToPort: !If [isServerless, 3306,3333 ]
+      CidrIp: !ImportValue
+        "Fn::Sub" : ${EnvironmentId}-BasePlatform-CidrPrivateSubnetLnsBackPriAZ1
+      GroupId:
+        Fn::GetAtt:
+        - GeneralPurposeRdsSecurityGroup
+        - GroupId
+
+  GeneralPurposeRdsToLnsBackInboundRuleAZ2:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      FromPort: !If [isServerless, 3306,3333 ]
+      IpProtocol: tcp
+      ToPort: !If [isServerless, 3306,3333 ]
+      CidrIp: !ImportValue
+        "Fn::Sub" : ${EnvironmentId}-BasePlatform-CidrPrivateSubnetLnsBackPriAZ2
+      GroupId:
+        Fn::GetAtt:
+        - GeneralPurposeRdsSecurityGroup
+        - GroupId
+        
+  GeneralPurposeRdsToLnsBackInboundRuleAZ3:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Condition: isAZ3
+    Properties:
+      FromPort: !If [isServerless, 3306,3333 ]
+      IpProtocol: tcp
+      ToPort: !If [isServerless, 3306,3333 ]
+      CidrIp: !ImportValue
+        "Fn::Sub" : ${EnvironmentId}-BasePlatform-CidrPrivateSubnetLnsBackPriAZ3
+      GroupId:
+        Fn::GetAtt:
+        - GeneralPurposeRdsSecurityGroup
+        - GroupId
+
+  GeneralPurposeRdsToTiBackInboundRuleAZ1:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      FromPort: !If [isServerless, 3306,3333 ]
+      IpProtocol: tcp
+      ToPort: !If [isServerless, 3306,3333 ]
+      CidrIp: !ImportValue
+        "Fn::Sub" : ${EnvironmentId}-BasePlatform-CidrPrivateSubnetTiBackPriAZ1
+      GroupId:
+        Fn::GetAtt:
+        - GeneralPurposeRdsSecurityGroup
+        - GroupId
+
+  GeneralPurposeRdsToTiBackInboundRuleAZ2:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      FromPort: !If [isServerless, 3306,3333 ]
+      IpProtocol: tcp
+      ToPort: !If [isServerless, 3306,3333 ]
+      CidrIp: !ImportValue
+        "Fn::Sub" : ${EnvironmentId}-BasePlatform-CidrPrivateSubnetTiBackPriAZ2
+      GroupId:
+        Fn::GetAtt:
+        - GeneralPurposeRdsSecurityGroup
+        - GroupId
+        
+  GeneralPurposeRdsToTiBackInboundRuleAZ3:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Condition: isAZ3
+    Properties:
+      FromPort: !If [isServerless, 3306,3333 ]
+      IpProtocol: tcp
+      ToPort: !If [isServerless, 3306,3333 ]
+      CidrIp: !ImportValue
+        "Fn::Sub" : ${EnvironmentId}-BasePlatform-CidrPrivateSubnetTiBackPriAZ3
+      GroupId:
+        Fn::GetAtt:
+        - GeneralPurposeRdsSecurityGroup
+        - GroupId
+
+  GeneralPurposeRdsToChaBackInboundRuleAZ1:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      FromPort: !If [isServerless, 3306,3333 ]
+      IpProtocol: tcp
+      ToPort: !If [isServerless, 3306,3333 ]
+      CidrIp: !ImportValue
+        "Fn::Sub" : ${EnvironmentId}-BasePlatform-CidrPrivateSubnetChaBackPriAZ1
+      GroupId:
+        Fn::GetAtt:
+        - GeneralPurposeRdsSecurityGroup
+        - GroupId
+
+  GeneralPurposeRdsToChaBackInboundRuleAZ2:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      FromPort: !If [isServerless, 3306,3333 ]
+      IpProtocol: tcp
+      ToPort: !If [isServerless, 3306,3333 ]
+      CidrIp: !ImportValue
+        "Fn::Sub" : ${EnvironmentId}-BasePlatform-CidrPrivateSubnetChaBackPriAZ2
+      GroupId:
+        Fn::GetAtt:
+        - GeneralPurposeRdsSecurityGroup
+        - GroupId
+        
+  GeneralPurposeRdsToChaBackInboundRuleAZ3:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Condition: isAZ3
+    Properties:
+      FromPort: !If [isServerless, 3306,3333 ]
+      IpProtocol: tcp
+      ToPort: !If [isServerless, 3306,3333 ]
+      CidrIp: !ImportValue
+        "Fn::Sub" : ${EnvironmentId}-BasePlatform-CidrPrivateSubnetChaBackPriAZ3
+      GroupId:
+        Fn::GetAtt:
+        - GeneralPurposeRdsSecurityGroup
+        - GroupId
+
+  FtBackPrivateSecurityGroup:
+    Condition: isDeployPrivateSubnetTiBackPri   
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPC
+      GroupDescription: Grupo seguridad fixed term back private     
+      GroupName: !Join ['-', [!Ref EnvironmentId , "ft-back-end-private-zone-sg"]]
+      Tags:
+        - Key: Name
+          Value: !Join ['-', [!Ref EnvironmentId , "ft-back-end-private-zone-sg"]]
+        - Key: PROJECT
+          Value: !Ref Project
+        - Key: ENVIRONMENT_TYPE
+          Value: !Ref EnvironmentType
+        - Key: TENANT_ID
+          Value: !Ref TenantId
+        - Key: ORGANIZATION
+          Value: !Ref Organization
+        - Key: ENVIRONMENT_ID
+          Value: !Ref EnvironmentId
+        - Key: MODULE
+          Value: !Ref Module
+        - Key: PACKAGE
+          Value: !Ref Package
+        - Key: VERSION
+          Value: !Ref Version
+        - Key: PROCESSING_TYPE
+          Value: !Ref ProcessingType
+  
+  FtBackPrivateInboundRule:    
+    Condition: isDeployPrivateSubnetTiBackPri   
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      CidrIp: !Ref CIDRBlock
+      FromPort: 443
+      IpProtocol: tcp
+      ToPort: 443         
+      GroupId:
+        Fn::GetAtt:
+        - FtBackPrivateSecurityGroup
+        - GroupId
+
+  FtBackPrivateOutboundRule2:
+    Condition: isDeployPrivateSubnetTiBackPri
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      FromPort: 443
+      IpProtocol: tcp
+      ToPort: 443
+      CidrIp: !Ref CIDRBlock         
+      GroupId:
+        Fn::GetAtt:
+        - FtBackPrivateSecurityGroup
+        - GroupId
+  
+  FtBackPrivateToS3VcpEndPointOutboundRule:    
+    Type: AWS::EC2::SecurityGroupEgress
+    Condition: isVPCEndpointsisDeployPrivateSubnetTiBackPri
+    Properties:
+      FromPort: 443
+      IpProtocol: tcp
+      ToPort: 443
+      DestinationPrefixListId: !FindInMap [RegionMap, !Ref "AWS::Region", S3PrefixListId]       
+      GroupId:
+        Fn::GetAtt:
+        - FtBackPrivateSecurityGroup
+        - GroupId
+
+  FtBackPrivateToDynamodbVcpEndPointOutboundRule:    
+    Type: AWS::EC2::SecurityGroupEgress
+    Condition: isVPCEndpointsisDeployPrivateSubnetTiBackPri
+    Properties:
+      FromPort: 443
+      IpProtocol: tcp
+      ToPort: 443
+      DestinationPrefixListId: !FindInMap [RegionMap, !Ref "AWS::Region", DynamodbPrefixListId]                
+      GroupId:
+        Fn::GetAtt:
+        - FtBackPrivateSecurityGroup
+        - GroupId
+
+  ChaBackPrivateSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Condition: isDeployPrivateSubnetChannelBackPri
+    Properties:
+      VpcId: !Ref VPC
+      GroupDescription: Grupo seguridad Loan back private     
+      GroupName: !Join ['-', [!Ref EnvironmentId , "cha-back-end-private-zone-sg"]]
+      Tags:
+        - Key: Name
+          Value: !Join ['-', [!Ref EnvironmentId , "cha-back-end-private-zone-sg"]]
+        - Key: PROJECT
+          Value: !Ref Project
+        - Key: ENVIRONMENT_TYPE
+          Value: !Ref EnvironmentType
+        - Key: TENANT_ID
+          Value: !Ref TenantId
+        - Key: ORGANIZATION
+          Value: !Ref Organization
+        - Key: ENVIRONMENT_ID
+          Value: !Ref EnvironmentId
+        - Key: MODULE
+          Value: !Ref Module
+        - Key: PACKAGE
+          Value: !Ref Package
+        - Key: VERSION
+          Value: !Ref Version
+        - Key: PROCESSING_TYPE
+          Value: !Ref ProcessingType
+  
+  ChaBackPrivateInboundRule:    
+    Type: AWS::EC2::SecurityGroupIngress
+    Condition: isDeployPrivateSubnetChannelBackPri
+    Properties:
+      CidrIp: !Ref CIDRBlock
+      FromPort: 443
+      IpProtocol: tcp
+      ToPort: 443         
+      GroupId:
+        Fn::GetAtt:
+        - ChaBackPrivateSecurityGroup
+        - GroupId
+
+  ChaBackPrivateOutboundRule2:
+    Type: AWS::EC2::SecurityGroupEgress
+    Condition: isDeployPrivateSubnetChannelBackPri
+    Properties:
+      FromPort: 443
+      IpProtocol: tcp
+      ToPort: 443
+      CidrIp: !Ref CIDRBlock
+      GroupId:
+        Fn::GetAtt:
+        - ChaBackPrivateSecurityGroup
+        - GroupId
+
+Outputs:
+  
+  GpGlueConnectionSecurityGroup:
+    Description: "Security Group Glue Connections"
+    Value: !Ref GpGlueConnectionSecurityGroup
+
+  CoreBastionSecurityGroup:
+    Description: "Security Group Bastion"
+    Value: !Ref CoreBastionSecurityGroup
+  
+  GpBackEndXsellSecurityGroup:
+    Description: "Security Group Xsell"
+    Value: !Ref GpBackEndXsellSecurityGroup
+  
+  GpBackEndPrivateZoneSecurityGroup:
+    Description: "Security Group Backend Private"
+    Value: !Ref GpBackEndPrivateZoneSecurityGroup
+
+  CoreVpcEndpointSecurityGroup:
+    Description: "Security Group Vpc Endpoint"
+    Value: !Ref CoreVpcEndpointSecurityGroup
+  
+  GeneralPurposeRdsSecurityGroup:
+    Description: "Security Group Rds"
+    Value: !Ref GeneralPurposeRdsSecurityGroup
+    
+  GpApisAndFrontendPrivateZoneSecurityGroup:
+    Description: "Grupo de seguridad para APIs y Frontend privado de proposito general"
+    Value: !Ref GpApisAndFrontendPrivateZoneSecurityGroup
+
+  GpApisAndFrontendPublicZoneSecurityGroup:
+    Description: "Grupo de seguridad para APIs y Frontend publico de proposito general"
+    Value: !Ref GpApisAndFrontendPublicZoneSecurityGroup
+    
+  DdBackPrivateSecurityGroup:
+    Description: Grupo de seguridad privado para el backend Demand Deposits Accounts
+    Value: !If [isDeployPrivateSubnetDemandDepositsBackPri , !Ref DdBackPrivateSecurityGroup, '']
+    
+  LnsBackPrivateSecurityGroup:
+    Description: Grupo de seguridad privado para el backend de Loans
+    Value: !If [isDeployPrivateSubnetLoansBackPri , !Ref LnsBackPrivateSecurityGroup, ''] 
+    
+  ChaBackPrivateSecurityGroup:
+    Description: Grupo de seguridad privado para el backend de Channels
+    Value: !If [isDeployPrivateSubnetChannelBackPri , !Ref ChaBackPrivateSecurityGroup, '']
+    
+  FtBackPrivateSecurityGroup:
+    Description: Grupo de seguridad privado para el backend de Trade Investments
+    Value: !If [isDeployPrivateSubnetTiBackPri , !Ref FtBackPrivateSecurityGroup, '']  
