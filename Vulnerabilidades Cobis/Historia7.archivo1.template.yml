@@ -751,6 +751,7 @@ Resources:
       LoadBalancerArn: !Ref LoadBalancer
       Port: !Ref ENVOperativePort
       Protocol: TCP
+      SslPolicy: ELBSecurityPolicy-2016-08
 
   LoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
