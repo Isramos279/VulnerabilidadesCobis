@@ -1,0 +1,315 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  channels-commons-service
+
+  SAM Template for channels commons service
+
+Parameters:
+  TimeZone:
+    Type: String
+    Description: "Indica la zona horaria que tomara el servicio."
+    Default: "America/Bogota"
+  LambdaAliasProduction:
+    Type: String
+    Description: Environment alias
+  LambdaAliasBeta:
+    Type: String
+    Description: Environment alias
+    ######################### Technical Parameters ############################
+  SecretArn:
+    Type: String
+    Description: "arn del secreto que contiene los datos de conexion."
+  SecurityGroupIds:
+    Type: String
+    Description: "Id de la VPC Endpoint que será asociada al API, esta solo se aplica si el API es de tipo privado."
+  SubnetIds:
+    Type: CommaDelimitedList
+    Description: "Identificador de las subnets donde se desplegará el API de desarrollo (Deben estar entre comillas dobles y separadas por comas)."
+  DbTarget:
+    Type: String
+    Description: "Instancia a la que se conectara el lambda master o replica"
+  AwsAccountIdToDeploy:
+    Type: String
+    Description: Identificador de la cuentas AWS donde se desplegará el API de desarrollo.
+  RegionToDeploy:
+    Type: String
+    AllowedValues: [us-east-2, us-west-2, us-east-1]
+    ConstraintDescription: must specify us-east-2, us-west-2, us-east-1.
+    Description: Región en la cual se realizará el despliegue del ambiente de desarrollo.
+  LogLevel:
+    Type: String
+    AllowedValues: [INFO, DEBUG, WARNING, TRACE]
+    ConstraintDescription: must specify INFO, DEBUG, WARNING or TRACE.
+    Description: "Nivel de escritura de logs en los lambda INFO,DEBUG,WARNING,TRACE"
+  LambdaAuthorizer:
+    Type: String
+    Description: "Nombre de la función lambda de tipo autorizador para el ambiente de desarrollo."
+  DBConnectionExpirationTime:
+    Type: Number
+    Description: "Tiempo de reconexión a la base de datos."
+  UserPoolId:
+    Type: String
+    Description: "Indica el user poolid para los token de autenticación."
+  DaysRetentionDev:
+    Type: Number
+    Description: "Indica el user poolid para los token de autenticación."
+  DaysRetentionQA:
+    Type: Number
+    Description: "Indica el user poolid para los token de autenticación."
+  DaysRetentionProd:
+    Type: Number
+    Description: "Indica el user poolid para los token de autenticación."
+  # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+  ModuleTagToLower:
+    Description: Identificador del módulo de Cuentas de Ahorros.
+    Type: String
+  ImageBatchSharedResourcesAccount:
+    Description: Cuenta AWS de recursos compartidos
+    Type: String
+  StageMainVersionName:
+    Description: Nombre de la version principal de el stage del APIGateway
+    Type: String
+  ExtTimeDeposits:
+    Type: String
+    Description: "Endpoint al Executor de Time Deposits."
+    Default: "url"
+  ExtTimeDepositsApiKey:
+    Type: String
+    Description: "Api Key del Api Generico Time Deposits."
+    Default: "noused"
+  ExtDemandDeposits:
+    Type: String
+    Description: "Endpoint al Executor de Demand Deposits."
+    Default: "url"
+  ExtDemandDepositsApiKey:
+    Type: String
+    Description: "Api Key del Api Generico Demand Deposits."
+    Default: "noused"
+  ExtLoans:
+    Type: String
+    Description: "Endpoint al Executor de Loans."
+    Default: "url"
+  ExtLoansApiKey:
+    Type: String
+    Description: "api key del api generico de Loans."
+    Default: "url"
+  ExtFinancial:
+    Type: String
+    Description: "Endpoint al Executor de Financial."
+    Default: "url"
+  ExtFinancialApiKey:
+    Type: String
+    Description: "api key del api generico de Financial."
+    Default: "noused"
+  MainDomain:
+    Type: String
+    Description: "Dominios propios del Modulo."
+    Default: "channels,general"
+  ChannelsCommonsExecutorLambdaConfiguration:
+    Description: "ChannelsCommonsExecutorLambda"
+    Type: String
+    Default: "1024:0:0:0:0:0:INFO"
+  ###############################################
+  #
+  #   End - Tags  Configurations
+  #
+  ###############################################
+  Organization:
+    Type: String
+    Description: "Identificador del dueño componente."
+  Package:
+    Type: String
+    Description: "Identificador del paquete de productos comerciales al que se asocia el componente."
+    Default: "COBIS CORE BANKING"
+  Version:
+    Type: String
+    Description: "Versión del módulo o aplicación a la que pertenece el componente."
+  EnvironmentId:
+    Type: String
+    Description: "Identificador del ambiente."
+  EnvironmentIdBase:
+    Type: String
+    Description: "Prefijo de recursos de la infraestructura base para referenciar en el microservicio.Pueden ser [dev,stg,prod o otro personalizado]"
+  EnvironmentIdBaseFront:
+    Type: String
+    Description: "Identificador del ambiente."
+  EnvironmentType:
+    Type: String
+    AllowedValues: [PRODUCTION, STAGING, QUALITY, DEVELOPMENT]
+    ConstraintDescription: must specify PRODUCTION, STAGING, QUALITY or DEVELOPMENT.
+  TenantId:
+    Type: String
+    Description: "Identificador del tenant."
+  Project:
+    Type: String
+    Description: "Identificador del proyecto por el que se crea el componente."
+    Default: "Core Serverless"
+  Product:
+    Description: "Identificador de base de producto de Propósito General."
+    Default: "Channels Commons"
+    Type: String
+  Module:
+    Type: String
+    Description: "Identificador del módulo."
+  ProcessingType:
+    Type: String
+    Description: "Tipo de procesamiento."
+  AWSBatchServiceRole:
+    Type: String
+    Description: "Rol para el servicio de ambiente de computacion en batch."
+  LoggingBucket:
+    Default: ""
+    Type: String
+    Description: "Bucket en el cual se almacenaran los logs de acceso a s3"
+  ###############################################
+  #
+  #   End - Tags  Configurations
+  #
+  ###############################################
+
+Conditions:
+  StageQA: !Equals [!Ref EnvironmentType, STAGING]
+  StageProd: !Equals [!Ref EnvironmentType, PRODUCTION]
+  StageDev: !Equals [!Ref EnvironmentType, DEVELOPMENT]
+  retentionEnvQACondition: !Equals [!Ref EnvironmentType, STAGING]
+  retentionEnvProdCondition: !Equals [!Ref EnvironmentType, PRODUCTION]
+
+Resources:
+  #UsagePlanApiKeys:
+  #  Type: AWS::Serverless::Application
+  #  Properties:
+  #    Location: apikey-template.yaml
+  #    Parameters:
+  #      EnvironmentId: !Ref EnvironmentId
+  #      ValueLargeApiKey: !Ref ValueLargeApiKey
+  #      ValueMediumApiKey: !Ref ValueMediumApiKey
+  #      ValueMicroApiKey: !Ref ValueMicroApiKey
+  #      ValueSmallApiKey: !Ref ValueSmallApiKey
+  #      ValueTrialApiKey: !Ref ValueTrialApiKey
+
+  TagResourceGroups:
+    Type: "AWS::ResourceGroups::Group"
+    Properties:
+      Name: !Join
+        - ""
+        - - !Ref EnvironmentId
+          - "-"
+          - !Ref Module
+      Description: "Grupo de recursos del modulo de Channels Commons."
+      ResourceQuery:
+        Type:
+          "TAG_FILTERS_1_0" 
+        Query:
+          ResourceTypeFilters: 
+            - "AWS::AllSupported" 
+          TagFilters:
+            - 
+              Key: "MODULE" 
+              Values: 
+                - !Ref Module
+            - 
+              Key: "ENVIRONMENT_ID" 
+              Values: 
+                - !Ref EnvironmentId
+
+  LambdasInfrastructure:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: cobis-channels-commons-online/online-compute-template.yaml
+      Parameters:
+        LambdaAliasProduction: !Ref LambdaAliasProduction
+        LambdaAliasBeta: !Ref LambdaAliasBeta
+        SecurityGroupIds: !Ref SecurityGroupIds
+        SubnetIds: !Join
+          - ","
+          - !Ref SubnetIds
+        DbTarget: !Ref DbTarget
+        AwsAccountIdToDeploy: !Ref AwsAccountIdToDeploy
+        RegionToDeploy: !Ref RegionToDeploy
+        LogLevel: !Ref LogLevel
+        LambdaAuthorizer: !Ref LambdaAuthorizer
+        SecretArn: !Ref SecretArn
+        ExtTimeDeposits: !Ref ExtTimeDeposits
+        ExtTimeDepositsApiKey: !Ref ExtTimeDepositsApiKey
+        ExtDemandDeposits: !Ref ExtDemandDeposits
+        ExtDemandDepositsApiKey: !Ref ExtDemandDepositsApiKey
+        ExtLoans: !Ref ExtLoans
+        ExtLoansApiKey: !Ref ExtLoansApiKey
+        ExtFinancial: !Ref ExtFinancial
+        ExtFinancialApiKey: !Ref ExtFinancialApiKey
+        MainDomain: !Ref MainDomain
+        DBConnectionExpirationTime: !Ref DBConnectionExpirationTime
+        UserPoolId: !Ref UserPoolId
+        TimeZone: !Ref TimeZone
+        DaysRetention:
+          !If [
+            retentionEnvProdCondition,
+            !Ref DaysRetentionProd,
+            !If [
+              retentionEnvQACondition,
+              !Ref DaysRetentionQA,
+              !Ref DaysRetentionDev,
+            ],
+          ]
+        Organization: !Ref Organization
+        Package: !Ref Package
+        Version: !Ref Version
+        EnvironmentId: !Ref EnvironmentId
+        EnvironmentIdBase: !Ref EnvironmentIdBase
+        EnvironmentIdBaseFront: !Ref EnvironmentIdBaseFront
+        EnvironmentType: !Ref EnvironmentType
+        TenantId: !Ref TenantId
+        Project: !Ref Project
+        Module: !Ref Module
+        ProcessingType: !Ref ProcessingType
+        StageName: !If [StageDev, v1-beta, !Ref StageMainVersionName]
+        StageMainVersionName: !Ref StageMainVersionName
+        ChannelsCommonsExecutorLambdaConfiguration: !Ref ChannelsCommonsExecutorLambdaConfiguration
+        ApiGatewayResponseMessage400: "El mensaje de solicitud no se encuentra debidamente formateado."
+        ApiGatewayResponseMessage401: "No se encuentra autorizado para ejecutar la operación."
+        ApiGatewayResponseMessage403: "La solicitud ha sido denegada."
+        ApiGatewayResponseMessage404: "El objeto no fue encontrado."
+        ApiGatewayResponseMessage405: "La operación (método, ej: GET, POST, etc.) que se trata de ejecutar no se encuentra soportado para el contexto."
+        ApiGatewayResponseMessage409: "La operación presentó un error durante la ejecución."
+        ApiGatewayResponseMessage429: "Se han realizado demasiadas solicitudes."
+        ApiGatewayResponseMessage500: "Se presentó un error durante el procesamiento de la solicitud."
+
+  BatchInfrastructure:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: cobis-channels-commons-batch/batch-compute-template.yaml
+      Parameters:
+        LoggingBucket: !Ref LoggingBucket
+        AwsAccountIdToDeploy: !Ref AwsAccountIdToDeploy
+        RegionToDeploy: !Ref RegionToDeploy
+        LogLevel: !Ref LogLevel
+        SecurityGroupIds: !Ref SecurityGroupIds
+        SubnetIds: !Join
+          - ","
+          - !Ref SubnetIds
+        AWSBatchServiceRole: !Ref AWSBatchServiceRole
+        ImageBatchSharedResourcesAccount: !Ref ImageBatchSharedResourcesAccount
+        SecretArn: !Ref SecretArn
+        Organization: !Ref Organization
+        Package: !Ref Package
+        Version: !Ref Version
+        EnvironmentId: !Ref EnvironmentId
+        EnvironmentIdBaseFront: !Ref EnvironmentIdBaseFront
+        EnvironmentIdBase: !Ref EnvironmentIdBase
+        EnvironmentType: !Ref EnvironmentType
+        TenantId: !Ref TenantId
+        Project: !Ref Project
+#        Product: !Ref Product
+        Module: !Ref Module
+        ProcessingType: !Ref ProcessingType
+      Tags:
+        ORGANIZATION: !Ref Organization
+        PACKAGE: !Ref Package
+        VERSION: !Ref Version
+        ENVIRONMENT_TYPE: !Ref EnvironmentType
+        ENVIRONMENT_ID: !Ref EnvironmentId
+        TENANT_ID: !Ref TenantId
+        PROJECT: !Ref Project
+        MODULE: !Ref Module
+        PROCESSING_TYPE: !Ref ProcessingType

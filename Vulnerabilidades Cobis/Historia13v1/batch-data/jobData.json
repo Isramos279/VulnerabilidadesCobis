@@ -1,0 +1,870 @@
+{
+    "%jobTable%": [
+        {
+            "PutRequest": {
+                "Item": {
+                    "configuration": {
+                        "M": {
+                            "computeEnvironment": {
+                                "S": "%environmentId%-atm-batch-environment"
+                            },
+                            "computeEnvironmentQueue": {
+                                "S": "%environmentId%-atm-batch-queue"
+                            },
+                            "databaseTarget": {
+                                "S": "master"
+                            },
+                            "entryPoint": {
+                                "S": "com.cobis.cloud.atm.aws.batch.procesos.b16201.JobDefinition"
+                            },
+                            "executableFileDirectory": {
+                                "S": "s3://%environmentId%-atm-%tenantId%-batch-executablefiledirectory-%accountId%"
+                            },
+                            "executableFileName": {
+                                "S": "cobis-atm-serverless-service-batch.jar"
+                            },
+                            "exportFiles": {
+                                "BOOL": false
+                            },
+                            "importFiles": {
+                                "BOOL": false
+                            },
+                            "jobDefinition": {
+                                "S": "%environmentId%-cobis-atm-job-definition-16201"
+                            },
+                            "logLevel": {
+                                "S": "TRACE"
+                            }
+                        }
+                    },
+                    "jobId": {
+                        "S": "16201"
+                    },
+                    "jobName": {
+                        "S": "Paso a historicos de las transacciones monetarias de ATM"
+                    }
+                }
+            }
+        },
+        {
+            "PutRequest": {
+                "Item": {
+                    "configuration": {
+                        "M": {
+                            "computeEnvironment": {
+                                "S": "%environmentId%-atm-batch-environment"
+                            },
+                            "computeEnvironmentQueue": {
+                                "S": "%environmentId%-atm-batch-queue"
+                            },
+                            "databaseTarget": {
+                                "S": "master"
+                            },
+                            "entryPoint": {
+                                "S": "com.cobis.cloud.atm.aws.batch.procesos.b16202.JobDefinition"
+                            },
+                            "executableFileDirectory": {
+                                "S": "s3://%environmentId%-atm-%tenantId%-batch-executablefiledirectory-%accountId%"
+                            },
+                            "executableFileName": {
+                                "S": "cobis-atm-serverless-service-batch.jar"
+                            },
+                            "exportFiles": {
+                                "BOOL": false
+                            },
+                            "importFiles": {
+                                "BOOL": false
+                            },
+                            "jobDefinition": {
+                                "S": "%environmentId%-cobis-atm-job-definition-16202"
+                            },
+                            "logLevel": {
+                                "S": "TRACE"
+                            }
+                        }
+                    },
+                    "jobId": {
+                        "S": "16202"
+                    },
+                    "jobName": {
+                        "S": "Paso a historicos de la tabla de log transacciones monetarias de ATM"
+                    }
+                }
+            }
+        },
+        {
+            "PutRequest": {
+                "Item": {
+                    "configuration": {
+                        "M": {
+                            "computeEnvironment": {
+                                "S": "%environmentId%-atm-batch-environment"
+                            },
+                            "computeEnvironmentQueue": {
+                                "S": "%environmentId%-atm-batch-queue"
+                            },
+                            "databaseTarget": {
+                                "S": "master"
+                            },
+                            "entryPoint": {
+                                "S": "com.cobis.cloud.atm.aws.batch.procesos.b16203.JobDefinition"
+                            },
+                            "executableFileDirectory": {
+                                "S": "s3://%environmentId%-atm-%tenantId%-batch-executablefiledirectory-%accountId%"
+                            },
+                            "executableFileName": {
+                                "S": "cobis-atm-serverless-service-batch.jar"
+                            },
+                            "exportFiles": {
+                                "BOOL": false
+                            },
+                            "importFiles": {
+                                "BOOL": false
+                            },
+                            "jobDefinition": {
+                                "S": "%environmentId%-cobis-atm-job-definition-16203"
+                            },
+                            "logLevel": {
+                                "S": "TRACE"
+                            }
+                        }
+                    },
+                    "jobId": {
+                        "S": "16203"
+                    },
+                    "jobName": {
+                        "S": "Paso a historicos para las tablas transaccionales de la compensación"
+                    }
+                }
+            }
+        },
+        {
+            "PutRequest": {
+                "Item": {
+                    "configuration": {
+                        "M": {
+                            "computeEnvironment": {
+                                "S": "%environmentId%-atm-batch-environment"
+                            },
+                            "computeEnvironmentQueue": {
+                                "S": "%environmentId%-atm-batch-queue"
+                            },
+                            "databaseTarget": {
+                                "S": "master"
+                            },
+                            "entryPoint": {
+                                "S": "com.cobis.cloud.atm.aws.batch.procesos.b16204.JobDefinition"
+                            },
+                            "executableFileDirectory": {
+                                "S": "s3://%environmentId%-atm-%tenantId%-batch-executablefiledirectory-%accountId%"
+                            },
+                            "executableFileName": {
+                                "S": "cobis-atm-serverless-service-batch.jar"
+                            },
+                            "exportFiles": {
+                                "BOOL": false
+                            },
+                            "importFiles": {
+                                "BOOL": false
+                            },
+                            "jobDefinition": {
+                                "S": "%environmentId%-cobis-atm-job-definition-16204"
+                            },
+                            "logLevel": {
+                                "S": "TRACE"
+                            }
+                        }
+                    },
+                    "jobId": {
+                        "S": "16204"
+                    },
+                    "jobName": {
+                        "S": "Paso a historicos para las tablas Pagos Comercio"
+                    }
+                }
+            }
+        },
+		{
+            "PutRequest": {
+                "Item": {
+                    "configuration": {
+                        "M": {
+                            "computeEnvironment": {
+                                "S": "%environmentId%-atm-batch-environment"
+                            },
+                            "computeEnvironmentQueue": {
+                                "S": "%environmentId%-atm-batch-queue"
+                            },
+                            "databaseTarget": {
+                                "S": "master"
+                            },
+                            "entryPoint": {
+                                "S": "com.cobis.cloud.atm.aws.batch.procesos.b16301.JobDefinition"
+                            },
+                            "executableFileDirectory": {
+                                "S": "s3://%environmentId%-atm-%tenantId%-batch-executablefiledirectory-%accountId%"
+                            },
+                            "executableFileName": {
+                                "S": "cobis-atm-serverless-service-batch.jar"
+                            },
+                            "exportFiles": {
+                                "BOOL": false
+                            },
+                            "importFiles": {
+                                "BOOL": false
+                            },
+                            "jobDefinition": {
+                                "S": "%environmentId%-atm-job-definition-16301"
+                            },
+                            "logLevel": {
+                                "S": "TRACE"
+                            }
+                        }
+                    },
+                    "jobId": {
+                        "S": "16301"
+                    },
+                    "jobName": {
+                        "S": "Notificación a regulatorios de las transacciones de ATM"
+                    }
+                }
+            }
+        },
+        {
+            "PutRequest": {
+                "Item": {
+                    "configuration": {
+                        "M": {
+                            "computeEnvironment": {
+                                "S": "%environmentId%-atm-batch-environment"
+                            },
+                            "computeEnvironmentQueue": {
+                                "S": "%environmentId%-atm-batch-queue"
+                            },
+                            "databaseTarget": {
+                                "S": "master"
+                            },
+                            "entryPoint": {
+                                "S": "com.cobis.cloud.atm.aws.batch.procesos.b16302.JobDefinition"
+                            },
+                            "executableFileDirectory": {
+                                "S": "s3://%environmentId%-atm-%tenantId%-batch-executablefiledirectory-%accountId%"
+                            },
+                            "executableFileName": {
+                                "S": "cobis-atm-serverless-service-batch.jar"
+                            },
+                            "exportFiles": {
+                                "BOOL": true
+                            },
+                            "exportFilesList": {
+                                "L": [
+                                    {
+                                        "M": {
+                                            "exportFile": {
+                                                "M": {
+                                                    "database": {
+                                                        "S": "cob_atm"
+                                                    },
+                                                    "formatOptions": {
+                                                        "M": {
+                                                            "writeHeader": {
+                                                                "BOOL": true
+                                                            }
+                                                        }
+                                                    },
+                                                    "name": {
+                                                        "S": "Reporte_pago_servicios_${PROCESS_DATE}"
+                                                    },
+                                                    "path": {
+                                                        "S": "Listado"
+                                                    },
+                                                    "table": {
+                                                        "S": "tm_rep_pag_serv_tmp"
+                                                    },
+                                                    "type": {
+                                                        "S": "csv"
+                                                    }
+                                                }
+                                            },
+                                            "outputFileDirectory": {
+                                                "S": "s3://%environmentId%-atm-%tenantId%-batch-output-%accountId%"
+                                            }
+                                        }
+                                    }
+                                ]
+                            },
+                            "importFiles": {
+                                "BOOL": false
+                            },
+                            "jobDefinition": {
+                                "S": "%environmentId%-atm-job-definition-16302"
+                            },
+                            "logLevel": {
+                                "S": "TRACE"
+                            }
+                        }
+                    },
+                    "jobId": {
+                        "S": "16302"
+                    },
+                    "jobName": {
+                        "S": "Job_Reporte de pagos de servicio mensual"
+                    }
+                }
+            }
+        },
+        {
+            "PutRequest": {
+                "Item": {
+                    "configuration": {
+                        "M": {
+                            "computeEnvironment": {
+                                "S": "%environmentId%-atm-batch-environment"
+                            },
+                            "computeEnvironmentQueue": {
+                                "S": "%environmentId%-atm-batch-queue"
+                            },
+                            "databaseTarget": {
+                                "S": "master"
+                            },
+                            "entryPoint": {
+                                "S": "com.cobis.cloud.atm.aws.batch.procesos.b16401.JobDefinition"
+                            },
+                            "executableFileDirectory": {
+                                "S": "s3://%environmentId%-atm-%tenantId%-batch-executablefiledirectory-%accountId%"
+                            },
+                            "executableFileName": {
+                                "S": "cobis-atm-serverless-service-batch.jar"
+                            },
+                            "exportFiles": {
+                                "BOOL": true
+                            },
+                            "exportFilesList": {
+                                "L": [
+                                    {
+                                        "M": {
+                                            "exportFile": {
+                                                "M": {
+                                                    "database": {
+                                                        "S": "cob_atm"
+                                                    },
+                                                    "formatOptions": {
+                                                        "M": {
+                                                            "writeHeader": {
+                                                                "BOOL": true
+                                                            }
+                                                        }
+                                                    },
+                                                    "name": {
+                                                        "S": "AUTORIZACIONES_${PROCESS_DATE}"
+                                                    },
+                                                    "path": {
+                                                        "S": "Listado"
+                                                    },
+                                                    "table": {
+                                                        "S": "tm_rep_arch_conc_tmp"
+                                                    },
+                                                    "type": {
+                                                        "S": "txt"
+                                                    }
+                                                }
+                                            },
+                                            "outputFileDirectory": {
+                                                "S": "s3://%environmentId%-atm-%tenantId%-batch-output-%accountId%"
+                                            }
+                                        }
+                                    }
+                                ]
+                            },
+                            "importFiles": {
+                                "BOOL": false
+                            },
+                            "jobDefinition": {
+                                "S": "%environmentId%-atm-job-definition-16401"
+                            },
+                            "logLevel": {
+                                "S": "TRACE"
+                            }
+                        }
+                    },
+                    "jobId": {
+                        "S": "16401"
+                    },
+                    "jobName": {
+                        "S": "Archivo_Conciliar"
+                    }
+                }
+            }
+        },
+        {
+            "PutRequest": {
+                "Item": {
+                    "configuration": {
+                        "M": {
+                            "computeEnvironment": {
+                                "S": "%environmentId%-atm-batch-environment"
+                            },
+                            "computeEnvironmentQueue": {
+                                "S": "%environmentId%-atm-batch-queue"
+                            },
+                            "databaseTarget": {
+                                "S": "master"
+                            },
+                            "entryPoint": {
+                                "S": "com.cobis.cloud.atm.aws.batch.procesos.b16402.JobDefinition"
+                            },
+                            "executableFileDirectory": {
+                                "S": "s3://%environmentId%-atm-%tenantId%-batch-executablefiledirectory-%accountId%"
+                            },
+                            "executableFileName": {
+                                "S": "cobis-atm-serverless-service-batch.jar"
+                            },
+                            "exportFiles": {
+                                "BOOL": false
+                            },
+                            "importFiles": {
+                                "BOOL": false
+                            },
+                            "jobDefinition": {
+                                "S": "%environmentId%-atm-job-definition-16402"
+                            },
+                            "logLevel": {
+                                "S": "TRACE"
+                            }
+                        }
+                    },
+                    "jobId": {
+                        "S": "16402"
+                    },
+                    "jobName": {
+                        "S": "Procesamiento de archivo para pagos de comercios"
+                    }
+                }
+            }
+        },
+        {
+            "PutRequest": {
+                "Item": {
+                    "configuration": {
+                        "M": {
+                            "computeEnvironment": {
+                                "S": "%environmentId%-atm-batch-environment"
+                            },
+                            "computeEnvironmentQueue": {
+                                "S": "%environmentId%-atm-batch-queue"
+                            },
+                            "databaseTarget": {
+                                "S": "master"
+                            },
+                            "entryPoint": {
+                                "S": "com.cobis.cloud.atm.aws.batch.procesos.b16403.JobDefinition"
+                            },
+                            "executableFileDirectory": {
+                                "S": "s3://%environmentId%-atm-%tenantId%-batch-executablefiledirectory-%accountId%"
+                            },
+                            "executableFileName": {
+                                "S": "cobis-atm-serverless-service-batch.jar"
+                            },
+                            "exportFiles": {
+                                "BOOL": true
+                            },
+                            "exportFilesList": {
+                                "L": [
+                                    {
+                                        "M": {
+                                            "exportFile": {
+                                                "M": {
+                                                    "database": {
+                                                        "S": "cob_atm"
+                                                },
+                                                    "formatOptions": {
+                                                        "M": {
+                                                            "writeHeader": {
+                                                                "BOOL": true
+                                                            }
+                                                        }
+                                                    },
+                                                    "name": {
+                                                        "S": "LPPAMMMWP021D00015_${PROCESS_DATE}"
+                                                    },
+                                                    "path": {
+                                                        "S": "Pagos_Comercios"
+                                                    },
+                                                    "table": {
+                                                        "S": "tm_pag_com_td_rep"
+                                                    },
+                                                    "type": {
+                                                        "S": "txt"
+                                                    }
+                                                }
+                                            },
+                                            "outputFileDirectory": {
+                                                "S": "s3://%environmentId%-atm-%tenantId%-batch-output-%accountId%"
+                                            }
+                                        }
+                                    }
+                                ]
+                            },
+                            "importFiles": {
+                                "BOOL": false
+                            },
+                            "jobDefinition": {
+                                "S": "%environmentId%-atm-job-definition-16403"
+                            },
+                            "logLevel": {
+                                "S": "TRACE"
+                            }
+                        }
+                    },
+                    "jobId": {
+                        "S": "16403"
+                    },
+                    "jobName": {
+                        "S": "BL pagos de comercios TD"
+                    }
+                }
+            }
+        },
+        {
+            "PutRequest": {
+                "Item": {
+                    "configuration": {
+                        "M": {
+                            "computeEnvironment": {
+                                "S": "%environmentId%-atm-batch-environment"
+                            },
+                            "computeEnvironmentQueue": {
+                                "S": "%environmentId%-atm-batch-queue"
+                            },
+                            "databaseTarget": {
+                                "S": "master"
+                            },
+                            "entryPoint": {
+                                "S": "com.cobis.cloud.atm.aws.batch.procesos.b16404.JobDefinition"
+                            },
+                            "executableFileDirectory": {
+                                "S": "s3://%environmentId%-atm-%tenantId%-batch-executablefiledirectory-%accountId%"
+                            },
+                            "executableFileName": {
+                                "S": "cobis-atm-serverless-service-batch.jar"
+                            },
+                            "exportFiles": {
+                                "BOOL": true
+                            },
+                            "exportFilesList": {
+                                "L": [
+                                    {
+                                        "M": {
+                                            "exportFile": {
+                                                "M": {
+                                                    "database": {
+                                                        "S": "cob_atm"
+                                                    },
+                                                    "formatOptions": {
+                                                        "M": {
+                                                            "writeHeader": {
+                                                                "BOOL": true
+                                                            }
+                                                        }
+                                                    },
+                                                    "name": {
+                                                        "S": "PAGNEQUI.RES_${PROCESS_DATE}"
+                                                    },
+                                                    "path": {
+                                                        "S": "Pagos_Comercios"
+                                                    },
+                                                    "table": {
+                                                        "S": "tm_pag_com_neq_rep"
+                                                    },
+                                                    "type": {
+                                                        "S": "txt"
+                                                    }
+                                                }
+                                            },
+                                            "outputFileDirectory": {
+                                                "S": "s3://%environmentId%-atm-%tenantId%-batch-output-%accountId%"
+                                            }
+                                        }
+                                    }
+                                ]
+                            },
+                            "importFiles": {
+                                "BOOL": false
+                            },
+                            "jobDefinition": {
+                                "S": "%environmentId%-atm-job-definition-16404"
+                            },
+                            "logLevel": {
+                                "S": "TRACE"
+                            }
+                        }
+                    },
+                    "jobId": {
+                        "S": "16404"
+                    },
+                    "jobName": {
+                        "S": "BL pagos de comercios Nequi"
+                    }
+                }
+            }
+        },
+        {
+            "PutRequest": {
+                "Item": {
+                    "configuration": {
+                        "M": {
+                            "computeEnvironment": {
+                                "S": "%environmentId%-atm-batch-environment"
+                            },
+                            "computeEnvironmentQueue": {
+                                "S": "%environmentId%-atm-batch-queue"
+                            },
+                            "databaseTarget": {
+                                "S": "master"
+                            },
+                            "entryPoint": {
+                                "S": "com.cobis.cloud.atm.aws.batch.procesos.b16405.JobDefinition"
+                            },
+                            "executableFileDirectory": {
+                                "S": "s3://%environmentId%-atm-%tenantId%-batch-executablefiledirectory-%accountId%"
+                            },
+                            "executableFileName": {
+                                "S": "cobis-atm-serverless-service-batch.jar"
+                            },
+                            "exportFiles": {
+                                "BOOL": true
+                            },
+                            "exportFilesList": {
+                                "L": [
+                                    {
+                                        "M": {
+                                            "exportFile": {
+                                                "M": {
+                                                    "database": {
+                                                        "S": "cob_atm"
+                                                    },
+                                                    "formatOptions": {
+                                                        "M": {
+                                                            "writeHeader": {
+                                                                "BOOL": true
+                                                            }
+                                                        }
+                                                    },
+                                                    "name": {
+                                                        "S": "LPPAMMMWP026D00028_${PROCESS_DATE}"
+                                                    },
+                                                    "path": {
+                                                        "S": "Pagos_Comercios"
+                                                    },
+                                                    "table": {
+                                                        "S": "tm_pag_com_tc_rep"
+                                                    },
+                                                    "type": {
+                                                        "S": "txt"
+                                                    }
+                                                }
+                                            },
+                                            "outputFileDirectory": {
+                                                "S": "s3://%environmentId%-atm-%tenantId%-batch-output-%accountId%"
+                                            }
+                                        }
+                                    }
+                                ]
+                            },
+                            "importFiles": {
+                                "BOOL": false
+                            },
+                            "jobDefinition": {
+                                "S": "%environmentId%-atm-job-definition-16405"
+                            },
+                            "logLevel": {
+                                "S": "TRACE"
+                            }
+                        }
+                    },
+                    "jobId": {
+                        "S": "16405"
+                    },
+                    "jobName": {
+                        "S": "BL pagos de comercios Tarjeta Credito"
+                    }
+                }
+            }
+        },
+        {
+            "PutRequest": {
+                "Item": {
+                    "configuration": {
+                        "M": {
+                            "computeEnvironment": {
+                                "S": "%environmentId%-atm-batch-environment"
+                            },
+                            "computeEnvironmentQueue": {
+                                "S": "%environmentId%-atm-batch-queue"
+                            },
+                            "databaseTarget": {
+                                "S": "master"
+                            },
+                            "entryPoint": {
+                                "S": "com.cobis.cloud.atm.aws.batch.procesos.b16406.JobDefinition"
+                            },
+                            "executableFileDirectory": {
+                                "S": "s3://%environmentId%-atm-%tenantId%-batch-executablefiledirectory-%accountId%"
+                            },
+                            "executableFileName": {
+                                "S": "cobis-atm-serverless-service-batch.jar"
+                            },
+                            "exportFiles": {
+                                "BOOL": false
+                            },
+                            "importFiles": {
+                                "BOOL": false
+                            },
+                            "jobDefinition": {
+                                "S": "%environmentId%-atm-job-definition-16406"
+                            },
+                            "logLevel": {
+                                "S": "TRACE"
+                            }
+                        }
+                    },
+                    "jobId": {
+                        "S": "16406"
+                    },
+                    "jobName": {
+                        "S": "Paso a historicos logtran ATM"
+                    }
+                }
+            }
+        },
+        {
+            "PutRequest": {
+                "Item": {
+                    "configuration": {
+                        "M": {
+                            "computeEnvironment": {
+                                "S": "%environmentId%-atm-batch-environment"
+                            },
+                            "computeEnvironmentQueue": {
+                                "S": "%environmentId%-atm-batch-queue"
+                            },
+                            "databaseTarget": {
+                                "S": "master"
+                            },
+                            "entryPoint": {
+                                "S": "com.cobis.cloud.atm.aws.batch.procesos.b16407.JobDefinition"
+                            },
+                            "executableFileDirectory": {
+                                "S": "s3://%environmentId%-atm-%tenantId%-batch-executablefiledirectory-%accountId%"
+                            },
+                            "executableFileName": {
+                                "S": "cobis-atm-serverless-service-batch.jar"
+                            },
+                            "exportFiles": {
+                                "BOOL": false
+                            },
+                            "importFiles": {
+                                "BOOL": false
+                            },
+                            "jobDefinition": {
+                                "S": "%environmentId%-atm-job-definition-16407"
+                            },
+                            "logLevel": {
+                                "S": "TRACE"
+                            }
+                        }
+                    },
+                    "jobId": {
+                        "S": "16407"
+                    },
+                    "jobName": {
+                        "S": "Paso a historicos tranmonet ATM"
+                    }
+                }
+            }
+        },
+        {
+            "PutRequest": {
+                "Item": {
+                    "configuration": {
+                        "M": {
+                            "computeEnvironment": {
+                                "S": "%environmentId%-atm-batch-environment"
+                            },
+                            "computeEnvironmentQueue": {
+                                "S": "%environmentId%-atm-batch-queue"
+                            },
+                            "databaseTarget": {
+                                "S": "master"
+                            },
+                            "entryPoint": {
+                                "S": "com.cobis.cloud.atm.aws.batch.procesos.b16408.JobDefinition"
+                            },
+                            "executableFileDirectory": {
+                                "S": "s3://%environmentId%-atm-%tenantId%-batch-executablefiledirectory-%accountId%"
+                            },
+                            "executableFileName": {
+                                "S": "cobis-atm-serverless-service-batch.jar"
+                            },
+                            "exportFiles": {
+                                "BOOL": true
+                            },
+                            "exportFilesList": {
+                                "L": [
+                                    {
+                                        "M": {
+                                            "exportFile": {
+                                                "M": {
+                                                    "database": {
+                                                        "S": "cob_atm"
+                                                    },
+                                                    "formatOptions": {
+                                                        "M": {
+                                                            "writeHeader": {
+                                                                "BOOL": true
+                                                            }
+                                                        }
+                                                    },
+                                                    "name": {
+                                                        "S": "Extraccion_Pasivas_${PROCESS_DATE}"
+                                                    },
+                                                    "path": {
+                                                        "S": "Pagos_Comercios"
+                                                    },
+                                                    "table": {
+                                                        "S": "tm_extrac_pasivas_tmp"
+                                                    },
+                                                    "type": {
+                                                        "S": "txt"
+                                                    }
+                                                }
+                                            },
+                                            "outputFileDirectory": {
+                                                "S": "s3://%environmentId%-atm-%tenantId%-batch-output-%accountId%"
+                                            }
+                                        }
+                                    }
+                                ]
+                            },
+                            "importFiles": {
+                                "BOOL": false
+                            },
+                            "jobDefinition": {
+                                "S": "%environmentId%-atm-job-definition-16408"
+                            },
+                            "logLevel": {
+                                "S": "TRACE"
+                            }
+                        }
+                    },
+                    "jobId": {
+                        "S": "16408"
+                    },
+                    "jobName": {
+                        "S": "Extraccion de informacion de pasivas"
+                    }
+                }
+            }
+        }
+    ]
+}

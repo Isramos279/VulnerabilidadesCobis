@@ -1,0 +1,606 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  channels commons-service
+
+  SAM Template for channels commons-service batch
+Parameters:
+  ######################### Technical Parameters ############################
+  AwsAccountIdToDeploy:
+    Type: String
+    Description: Identificador de la cuentas AWS donde se desplegará el API de desarrollo.
+  RegionToDeploy:
+    Type: String
+    AllowedValues: [us-east-2, us-west-2, us-east-1]
+    ConstraintDescription: must specify us-east-2,us-west-2,us-east-1.
+    Description: Región en la cual se realizará el despliegue del ambiente de desarrollo.
+  LogLevel:
+    Type: String
+    AllowedValues: [INFO, DEBUG, WARNING, TRACE]
+    ConstraintDescription: must specify INFO, DEBUG, WARNING or TRACE.
+    Description: "Nivel de escritura de logs en los lambda INFO,DEBUG,WARNING,TRACE"
+  SecurityGroupIds:
+    Type: String
+    Description: "Id de la VPC Endpoint que será asociada al API, esta solo se aplica si el API es de tipo privado."
+  SubnetIds:
+    Type: CommaDelimitedList
+    Description: "Identificador de las subnets donde se desplegará el API de desarrollo (Deben estar entre comillas dobles y separadas por comas)."
+  AWSBatchServiceRole:
+    Type: String
+    Description: "Rol para el servicio de ambiente de computacion en batch."
+  ImageBatchSharedResourcesAccount:
+    Description: "URI de la imagen para procesamiento Batch"
+    Type: String
+  SecretArn:
+    Type: String
+    Description: "ARN del secreto que contiene los datos de conexion a la base de datos MySQL para el microservicio."
+  Organization:
+    Type: String
+    Description: "Identificador del dueño componente."
+  Package:
+    Type: String
+    Description: "Identificador del paquete de productos comerciales al que se asocia el componente."
+  Version:
+    Type: String
+    Default: "0.1"
+    Description: "Versión del módulo o aplicación a la que pertenece el componente."
+  EnvironmentId:
+    Type: String
+    Description: "Identificador del ambiente."
+  EnvironmentIdBaseFront:
+    Type: String
+    Description: "Identificador del ambiente."
+  EnvironmentIdBase:
+    Type: String
+    Description: "Prefijo de recursos de la infraestructura base para referenciar en el microservicio.Pueden ser [dev,stg,prod o otro personalizado]"
+  EnvironmentType:
+    Type: String
+    AllowedValues: [PRODUCTION, STAGING, QUALITY, DEVELOPMENT]
+    ConstraintDescription: must specify PRODUCTION, STAGING, QUALITY or DEVELOPMENT.
+  TenantId:
+    Type: String
+    Description: "Identificador del tenant."
+  Project:
+    Type: String
+    Description: "Identificador del proyecto por el que se crea el componente."
+  Module:
+    Type: String
+    Description: "Identificador del módulo."
+  ProcessingType:
+    Type: String
+    Description: "Tipo de procesamiento."
+  LoggingBucket:
+    Default: ""
+    Type: String
+    Description: "Bucket en el cual se almacenaran los logs de acceso a s3"
+
+Conditions:
+  LoggingBucketIsDefined: !Not [ !Equals [ "", !Ref LoggingBucket ] ]
+
+Resources:
+  JobDefinitionExecutionRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action: sts:AssumeRole
+            Principal:
+              Service:
+                - ecs-tasks.amazonaws.com
+            Effect: Allow
+            Sid: ""
+      Path: /
+      RoleName: !Sub "${EnvironmentId}-channels-commons-job-definition-execution-role"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEventBridgeFullAccess
+      Policies:
+        - PolicyName: !Sub "${EnvironmentId}-channels-commons-job-definition-execution-role-getSecret-policy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: Stmt1611064287893
+                Action:
+                  - secretsmanager:DescribeSecret
+                  - secretsmanager:GetSecretValue
+                  - secretsmanager:ListSecrets
+                Effect: Allow
+                Resource: !Ref SecretArn
+        - PolicyName: !Sub "${EnvironmentId}-channels-commons-job-definition-execution-role-allow-buckets-policy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: Stmt1611064607179
+                Action: s3:*
+                Effect: Allow
+                Resource:
+                  - !Sub "arn:aws:s3:::${EnvironmentId}-*"
+      Tags:
+        - Key: "ORGANIZATION"
+          Value: !Ref Organization
+        - Key: "PACKAGE"
+          Value: !Ref Package
+        - Key: "VERSION"
+          Value: !Ref Version
+        - Key: "ENVIRONMENT_TYPE"
+          Value: !Ref EnvironmentType
+        - Key: "ENVIRONMENT_ID"
+          Value: !Ref EnvironmentId
+        - Key: "TENANT_ID"
+          Value: !Ref TenantId
+        - Key: "PROJECT"
+          Value: !Ref Project
+        - Key: "MODULE"
+          Value: !Ref Module
+        - Key: "PROCESSING_TYPE"
+          Value: "BATCH"
+
+  TotalizarTransaccionesJobDefinition:
+    Type: AWS::Batch::JobDefinition
+    Properties:
+      Type: container
+      PlatformCapabilities:
+        - FARGATE
+      JobDefinitionName: !Sub ${EnvironmentId}-cobis-channels-commons-job-definition-18101
+      RetryStrategy:
+        Attempts: 3
+        EvaluateOnExit:
+        - OnStatusReason: "Timeout waiting for network interface provisioning to complete."
+          Action: "RETRY"
+        - OnReason: "*"
+          Action: "EXIT"
+      Parameters: { }
+      ContainerProperties:
+        Command:
+          - sh
+          - /batch_module/scripts/execute-jar-from-s3.sh
+          - Ref::requestObject
+        ExecutionRoleArn: !Join
+          - ""
+          - - "arn:aws:iam::"
+            - !Sub ${AwsAccountIdToDeploy}
+            - ":role/"
+            - !Sub ${EnvironmentId}
+            - "-batch-task-execution-role"
+        JobRoleArn: !GetAtt JobDefinitionExecutionRole.Arn
+        ResourceRequirements:
+          - Type: VCPU
+            Value: 1
+          - Type: MEMORY
+            Value: 2048
+        Secrets:
+          - Name: SECRET_VALUE
+            ValueFrom: !Ref SecretArn
+        FargatePlatformConfiguration:
+          PlatformVersion: LATEST
+        Image: !Ref ImageBatchSharedResourcesAccount
+      Tags:
+        {
+          "ORGANIZATION": !Ref Organization,
+          "PACKAGE": !Ref Package,
+          "VERSION": !Ref Version,
+          "ENVIRONMENT_TYPE": !Ref EnvironmentType,
+          "ENVIRONMENT_ID": !Ref EnvironmentId,
+          "TENANT_ID": !Ref TenantId,
+          "PROJECT": !Ref Project,
+          "MODULE": !Ref Module,
+          "PROCESSING_TYPE": !Ref ProcessingType,
+        }
+
+  ContabilizarTransaccionesATMJobDefinition:
+    Type: AWS::Batch::JobDefinition
+    Properties:
+      Type: container
+      PlatformCapabilities:
+        - FARGATE
+      JobDefinitionName: !Sub ${EnvironmentId}-cobis-channels-commons-job-definition-18102
+      RetryStrategy:
+        Attempts: 3
+        EvaluateOnExit:
+        - OnStatusReason: "Timeout waiting for network interface provisioning to complete."
+          Action: "RETRY"
+        - OnReason: "*"
+          Action: "EXIT"
+      Parameters: { }
+      ContainerProperties:
+        Command:
+          - sh
+          - /batch_module/scripts/execute-jar-from-s3.sh
+          - Ref::requestObject
+        ExecutionRoleArn: !Join
+          - ""
+          - - "arn:aws:iam::"
+            - !Sub ${AwsAccountIdToDeploy}
+            - ":role/"
+            - !Sub ${EnvironmentId}
+            - "-batch-task-execution-role"
+        JobRoleArn: !GetAtt JobDefinitionExecutionRole.Arn
+        ResourceRequirements:
+          - Type: VCPU
+            Value: 1
+          - Type: MEMORY
+            Value: 2048
+        Secrets:
+          - Name: SECRET_VALUE
+            ValueFrom: !Ref SecretArn
+        FargatePlatformConfiguration:
+          PlatformVersion: LATEST
+        Image: !Ref ImageBatchSharedResourcesAccount
+      Tags:
+        {
+          "ORGANIZATION": !Ref Organization,
+          "PACKAGE": !Ref Package,
+          "VERSION": !Ref Version,
+          "ENVIRONMENT_TYPE": !Ref EnvironmentType,
+          "ENVIRONMENT_ID": !Ref EnvironmentId,
+          "TENANT_ID": !Ref TenantId,
+          "PROJECT": !Ref Project,
+          "MODULE": !Ref Module,
+          "PROCESSING_TYPE": !Ref ProcessingType,
+        }
+
+  ContabilizarTransacionesACHJobDefinition:
+    Type: AWS::Batch::JobDefinition
+    Properties:
+      Type: container
+      PlatformCapabilities:
+        - FARGATE
+      JobDefinitionName: !Sub ${EnvironmentId}-cobis-channels-commons-job-definition-18103
+      RetryStrategy:
+        Attempts: 3
+        EvaluateOnExit:
+        - OnStatusReason: "Timeout waiting for network interface provisioning to complete."
+          Action: "RETRY"
+        - OnReason: "*"
+          Action: "EXIT"
+      Parameters: { }
+      ContainerProperties:
+        Command:
+          - sh
+          - /batch_module/scripts/execute-jar-from-s3.sh
+          - Ref::requestObject
+        ExecutionRoleArn: !Join
+          - ""
+          - - "arn:aws:iam::"
+            - !Sub ${AwsAccountIdToDeploy}
+            - ":role/"
+            - !Sub ${EnvironmentId}
+            - "-batch-task-execution-role"
+        JobRoleArn: !GetAtt JobDefinitionExecutionRole.Arn
+        ResourceRequirements:
+          - Type: VCPU
+            Value: 1
+          - Type: MEMORY
+            Value: 2048
+        Secrets:
+          - Name: SECRET_VALUE
+            ValueFrom: !Ref SecretArn
+        FargatePlatformConfiguration:
+          PlatformVersion: LATEST
+        Image: !Ref ImageBatchSharedResourcesAccount
+      Tags:
+        {
+          "ORGANIZATION": !Ref Organization,
+          "PACKAGE": !Ref Package,
+          "VERSION": !Ref Version,
+          "ENVIRONMENT_TYPE": !Ref EnvironmentType,
+          "ENVIRONMENT_ID": !Ref EnvironmentId,
+          "TENANT_ID": !Ref TenantId,
+          "PROJECT": !Ref Project,
+          "MODULE": !Ref Module,
+          "PROCESSING_TYPE": !Ref ProcessingType,
+        }
+
+  BatchStateMachineRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      Path: '/'
+      Tags:
+        - Key: "ORGANIZATION"
+          Value: !Ref Organization
+        - Key: "PACKAGE"
+          Value: !Ref Package
+        - Key: "VERSION"
+          Value: !Ref Version
+        - Key: "ENVIRONMENT_TYPE"
+          Value: !Ref EnvironmentType
+        - Key: "ENVIRONMENT_ID"
+          Value: !Ref EnvironmentId
+        - Key: "TENANT_ID"
+          Value: !Ref TenantId
+        - Key: "PROJECT"
+          Value: !Ref Project
+        - Key: "MODULE"
+          Value: !Ref Module
+        - Key: "PROCESSING_TYPE"
+          Value: "BATCH"
+
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Sid: ''
+            Action:
+              - 'sts:AssumeRole'
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+
+  BatchStateMachinePolicy:
+    Type: 'AWS::IAM::Policy'
+    Properties:
+      PolicyName: !Sub "${EnvironmentId}-${Module}-Batch-StepFunction-Policies"
+      Roles:
+        - !Ref BatchStateMachineRole
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'logs:CreateLogGroup'
+              - 'logs:CreateLogStream'
+              - 'logs:PutLogEvents'
+              - 'logs:CreateLogStream'
+              - 'logs:PutLogEvents'
+              - 'logs:PutLogEventsBatch'
+            #Resource: '*'
+            # Validacion de seguridad
+            Resource:
+              - "arn:aws:logs:*:*:*"
+          - Effect: Allow
+            Action:
+              - 'states:StartExecution'
+              - 'states:DescribeExecution'
+              - 'states:ListStateMachines'
+              - 'states:StopExecution'
+              - 'states:DescribeStateMachineForExecution'
+              - 'states:DescribeActivity'
+              - 'states:DescribeStateMachine'
+              - 'states:ListExecutions'
+              - 'states:GetExecutionHistory'
+              - 'states:ListTagsForResource'
+            Resource:
+              - 'arn:aws:states:*:*:activity:*'
+              - 'arn:aws:states:*:*:execution:*:*'
+              - 'arn:aws:states:*:*:stateMachine:*'
+          - Effect: Allow
+            Action:
+              - 'events:PutTargets'
+              - 'events:PutRule'
+              - 'events:DescribeRule'
+            #Resource: '*'
+            # Validacion de seguridad
+            Resource:
+              - "arn:aws:events:*:*:*"
+          - Effect: Allow
+            Action:
+              - 'lambda:InvokeFunction'
+            #Resource: '*'
+            # Validacion de seguridad
+            Resource:
+              - "arn:aws:lambda:*:*:function:*"
+          - Effect: Allow
+            Action:
+              - 'batch:submitJob'
+            #Resource: '*'
+            Resource:
+              - "arn:aws:batch:*:*:*"
+
+  SaExecutableFileDirectoryBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: !Sub ${EnvironmentId}-channels-${TenantId}-batch-executablefiledirectory-${AwsAccountIdToDeploy}
+      AccessControl: "Private"
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: TRUE
+        BlockPublicPolicy: TRUE
+        IgnorePublicAcls: TRUE
+        RestrictPublicBuckets: TRUE
+      LoggingConfiguration:
+        !If 
+        - LoggingBucketIsDefined
+        - 
+          DestinationBucketName: !Ref LoggingBucket
+          LogFilePrefix: !Join ['',["input","-", !Ref "Module" ]]
+        - !Ref AWS::NoValue
+      LifecycleConfiguration:
+        Rules:
+          - Id: executablefiledirectory-life-cycle
+            Status: Enabled
+            ExpirationInDays: 60
+            NoncurrentVersionExpirationInDays: 60
+            NoncurrentVersionTransitions:
+              - TransitionInDays: 30
+                StorageClass: INTELLIGENT_TIERING
+            Transitions:
+              - TransitionInDays: 30
+                StorageClass: INTELLIGENT_TIERING
+      Tags:
+        - Key: "ORGANIZATION"
+          Value: !Ref Organization
+        - Key: "PACKAGE"
+          Value: !Ref Package
+        - Key: "VERSION"
+          Value: !Ref Version
+        - Key: "ENVIRONMENT_TYPE"
+          Value: !Ref EnvironmentType
+        - Key: "ENVIRONMENT_ID"
+          Value: !Ref EnvironmentId
+        - Key: "TENANT_ID"
+          Value: !Ref TenantId
+        - Key: "PROJECT"
+          Value: !Ref Project
+        - Key: "MODULE"
+          Value: !Ref Module
+        - Key: "PROCESSING_TYPE"
+          Value: "BATCH"
+
+  SaExecutableFileDirectoryPolicy:
+    Type: "AWS::S3::BucketPolicy"
+    Properties:
+      Bucket:
+        Ref: "SaExecutableFileDirectoryBucket"
+      PolicyDocument:
+        Statement:
+          - Effect: "Deny"
+            Principal: "*"
+            Action:
+              - "s3:*"
+            Resource:
+              - !Join [ "", [ !GetAtt SaExecutableFileDirectoryBucket.Arn, "/*" ] ]
+              - !GetAtt SaExecutableFileDirectoryBucket.Arn
+            Condition:
+              Bool:
+                "aws:SecureTransport":
+                  - "false"
+
+  ExecuteContabilizationStateMachine:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      StateMachineName: !Sub ${EnvironmentId}-cobis-channels-commons-mesh-18100-ExecuteContabilization
+      RoleArn: !Join
+        - ""
+        - - "arn:aws:iam::"
+          - !Sub ${AwsAccountIdToDeploy}
+          - ":role/"
+          - !Sub ${EnvironmentId}
+          - "-GeneralStateMachineRole"
+      Tags:
+        - Key: "ORGANIZATION"
+          Value: !Ref Organization
+        - Key: "PACKAGE"
+          Value: !Ref Package
+        - Key: "VERSION"
+          Value: !Ref Version
+        - Key: "ENVIRONMENT_TYPE"
+          Value: !Ref EnvironmentType
+        - Key: "ENVIRONMENT_ID"
+          Value: !Ref EnvironmentId
+        - Key: "TENANT_ID"
+          Value: !Ref TenantId
+        - Key: "PROJECT"
+          Value: !Ref Project
+        - Key: "MODULE"
+          Value: !Ref Module
+        - Key: "PROCESSING_TYPE"
+          Value: "BATCH"
+      DefinitionString: !Sub |-
+        {
+          "Comment": "Ejecutar proceso de contabilización para Channels",
+          "StartAt": "Get Parameters",
+          "States": {
+            "Get Parameters": {
+              "Type": "Task",
+              "Resource": "arn:aws:lambda:${RegionToDeploy}:${AwsAccountIdToDeploy}:function:${EnvironmentId}-cobis-batch-get-job-parameters",
+              "Parameters": {
+                  "meshId": "18100"
+              },
+              "ResultPath": "$",
+              "Next": "18101"
+            },
+            "18101": {
+              "Type": "Task",
+              "InputPath": "$.[?(@.jobId == '18101')]",
+              "ResultPath": null,
+              "Resource": "arn:aws:states:::states:startExecution.sync",
+              "Parameters": {
+                "StateMachineArn": "arn:aws:states:${RegionToDeploy}:${AwsAccountIdToDeploy}:stateMachine:${EnvironmentId}-cobis-batch-business_logic_execution_flow",
+                "Input.$": "$.[0]"
+              },
+              "Next": "ContaCanales"
+            },
+            "ContaCanales": {
+              "Type": "Parallel",
+              "OutputPath": "$.[0]",
+              "Branches": [
+                {
+                  "StartAt": "18102",
+                  "States": {
+                    "18102": {
+                      "Type": "Task",
+                      "InputPath": "$.[?(@.jobId == '18102')]",
+                      "ResultPath": null,
+                      "Resource": "arn:aws:states:::states:startExecution.sync",
+                      "Parameters": {
+                        "StateMachineArn": "arn:aws:states:${RegionToDeploy}:${AwsAccountIdToDeploy}:stateMachine:${EnvironmentIdBase}-cobis-batch-business_logic_execution_flow",
+                        "Input.$": "$.[0]"
+                      },
+                      "End": true
+                    }
+                  }
+                },
+                {
+                  "StartAt": "18103",
+                  "States": {
+                    "18103": {
+                      "Type": "Task",
+                      "InputPath": "$.[?(@.jobId == '18103')]",
+                      "ResultPath": null,
+                      "Resource": "arn:aws:states:::states:startExecution.sync",
+                      "Parameters": {
+                        "StateMachineArn": "arn:aws:states:${RegionToDeploy}:${AwsAccountIdToDeploy}:stateMachine:${EnvironmentIdBase}-cobis-batch-business_logic_execution_flow",
+                        "Input.$": "$.[0]"
+                      },
+                      "End": true
+                    }
+                  }
+                }
+              ],
+              "End": true
+            }
+          }
+        }
+
+  ChannelsComputeEnvironment:
+    Type: AWS::Batch::ComputeEnvironment
+    Properties:
+      ComputeEnvironmentName: !Sub "${EnvironmentId}-cobis-channels-commons-batch-environment"
+      ComputeResources:
+        SecurityGroupIds: [ !Ref SecurityGroupIds ]
+        Subnets: !Ref SubnetIds
+        MaxvCpus: 160
+        Type: FARGATE
+      ServiceRole: !Ref AWSBatchServiceRole
+      Type: MANAGED
+      Tags:
+        {
+          "ORGANIZATION": !Ref Organization,
+          "PACKAGE": !Ref Package,
+          "VERSION": !Ref Version,
+          "ENVIRONMENT_TYPE": !Ref EnvironmentType,
+          "ENVIRONMENT_ID": !Ref EnvironmentId,
+          "TENANT_ID": !Ref TenantId,
+          "PROJECT": !Ref Project,
+          "MODULE": !Ref Module,
+          "PROCESSING_TYPE": !Ref ProcessingType,
+        }
+
+  ChannelsJobQueue:
+    Type: AWS::Batch::JobQueue
+    DependsOn: ChannelsComputeEnvironment
+    Properties:
+      ComputeEnvironmentOrder:
+        - Order: 1
+          ComputeEnvironment: !Ref ChannelsComputeEnvironment
+      JobQueueName: !Sub "${EnvironmentId}-cobis-channels-commons-batch-environment-queue"
+      Priority: 1
+      State: ENABLED
+      Tags:
+        {
+          "ORGANIZATION": !Ref Organization,
+          "PACKAGE": !Ref Package,
+          "VERSION": !Ref Version,
+          "ENVIRONMENT_TYPE": !Ref EnvironmentType,
+          "ENVIRONMENT_ID": !Ref EnvironmentId,
+          "TENANT_ID": !Ref TenantId,
+          "PROJECT": !Ref Project,
+          "MODULE": !Ref Module,
+          "PROCESSING_TYPE": !Ref ProcessingType,
+        }
