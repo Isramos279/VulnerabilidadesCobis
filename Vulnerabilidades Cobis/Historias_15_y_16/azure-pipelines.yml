@@ -1,0 +1,67 @@
+# pipeline
+
+parameters:
+- name: PROJECT_KEY
+  default: 'cobis-atm-cis-service'
+- name: DEPLOY_CONFIG
+  default: 'atm-cis-deploy'
+- name: JAVA_PROJECT_PATH
+  default: 'cobis-atm-parent'
+- name: DOCKERFILE_PATH
+  default: 'atm-middleware-installer'
+- name: DEVELOP_DEPLOY_VARIABLES
+  type: object
+  default:
+    AWS_DEFAULT_ACCOUNT: "681989517074"
+    AWS_DEFAULT_REGION: "us-east-1"
+    ENVIRONMENT: "dev1"
+- name: QUALITY_DEPLOY_VARIABLES
+  type: object
+  default:
+    AWS_DEFAULT_ACCOUNT: "110595436954"
+    AWS_DEFAULT_REGION: "us-east-1"
+    ENVIRONMENT: "qa1"  
+- name: STAGING_DEPLOY_VARIABLES
+  type: object
+  default:
+    AWS_DEFAULT_ACCOUNT: "471419321612"
+    AWS_DEFAULT_REGION: "us-east-1"
+    ENVIRONMENT: "stg1"   
+- name: PRODUCTION_DEPLOY_VARIABLES
+  type: object
+  default:
+    AWS_DEFAULT_ACCOUNT: "681989517074"
+    AWS_DEFAULT_REGION: "us-east-1"
+    ENVIRONMENT: "xxx"
+- name: MODULE
+  default: 'cobis-atm-cis-service'
+- name: DR_ENABLED
+  default: 'false'
+- name: DR_ACTIVATED
+  default: 'false'
+
+trigger:
+ branches:
+   include:
+     - 'develop'
+     - 'quality'
+     - 'staging'
+     - 'master'
+
+resources:
+  repositories:
+    - repository: templates
+      type: git #type of repository
+      name: cobis-cloud-devops
+      ref: 'refs/tags/v6.0.0'
+
+stages:
+- template: azure/stages/templates/containerMicroserviceTemplate.yml@templates
+  parameters:
+    PROJECT_KEY: '${{ parameters.PROJECT_KEY }}'
+    DEPLOY_CONFIG: '${{ parameters.DEPLOY_CONFIG }}'
+    JAVA_PROJECT_PATH: '${{ parameters.JAVA_PROJECT_PATH }}'
+    DOCKERFILE_PATH: '${{ parameters.DOCKERFILE_PATH }}'
+    MODULE: '${{ parameters.MODULE }}'
+    DR_ENABLED: '${{ parameters.DR_ENABLED }}'
+    DR_ACTIVATED: '${{ parameters.DR_ACTIVATED }}'
