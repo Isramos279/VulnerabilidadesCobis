@@ -1,0 +1,213 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>com.cobis.cloud.atm</groupId>
+	<artifactId>cobis-atm-serverless-service-batch</artifactId>
+	<version>1.0.0</version>
+	<name>cobis-atm-batch</name>
+
+	<packaging>jar</packaging>
+	<parent>
+		<groupId>com.cobis.cloud.atm</groupId>
+		<artifactId>cobis-atm-serverless-service</artifactId>
+		<version>1.0.0</version>
+		<relativePath>../pom.xml</relativePath>
+	</parent>
+
+	<properties>
+		<lombok.version>1.18.12</lombok.version>
+	</properties>
+
+	<!-- GENERAL DEPENDENCIES  -->
+	<dependencies>
+		<dependency>
+			<groupId>com.cobis.cloud</groupId>
+			<artifactId>cobis-cloud-batch</artifactId>
+			<version>${com.cobis.cloud.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>com.google.protobuf</groupId>
+					<artifactId>protobuf-java</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-junit-jupiter</artifactId>
+			<version>4.0.0</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-inline</artifactId>
+			<version>3.10.0</version>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/software.amazon.awssdk/secretsmanager -->
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>secretsmanager</artifactId>
+			<version>2.17.115</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>aws-lambda-java-core</artifactId>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>log4j</groupId>
+			<artifactId>log4j</artifactId>
+			<version>1.2.17</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<version>${lombok.version}</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.github.stefanbirkner</groupId>
+			<artifactId>system-lambda</artifactId>
+			<version>1.2.0</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.cobiscorp.businesslogic</groupId>
+			<artifactId>cobis-atm-backend</artifactId>
+			<version>${com.cobis.atm.backend}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.cobiscorp.businesslogic</groupId>
+			<artifactId>cobis-atm-backend-aws</artifactId>
+			<version>${com.cobis.atm.backend.aws}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.cobiscorp.businesslogic</groupId>
+			<artifactId>cobis-channels-commons-backend</artifactId>
+			<version>${com.cobis.channels.commons.backend}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.cobiscorp.ddaccounts</groupId>
+			<artifactId>cobis-ddaccounts-backend</artifactId>
+			<version>${com.cobis.ddaccounts.backend}</version>
+			<classifier>api</classifier>
+		</dependency>
+
+		<dependency>
+			<groupId>com.cobis.cloud.fileprocessing</groupId>
+			<artifactId>cobis-cloud-file-processing-bl</artifactId>
+			<version>${com.cobis.cloud.fileprocessing.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.cobis.cloud.fileprocessing</groupId>
+			<artifactId>cobis-cloud-file-processing-batch</artifactId>
+			<version>${com.cobis.cloud.fileprocessing.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-core</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+		</dependency>
+
+
+		<dependency>
+			<groupId>com.github.stefanbirkner</groupId>
+			<artifactId>system-lambda</artifactId>
+			<version>1.2.0</version>
+			<scope>test</scope>
+		</dependency>
+
+    </dependencies>
+
+	<build>
+		<finalName>cobis-atm-serverless-service-batch</finalName>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-shade-plugin</artifactId>
+				<configuration>
+					<createDependencyReducedPom>false</createDependencyReducedPom>
+					<filters>
+						<filter>
+							<artifact>*:*</artifact>
+							<excludes>
+								<!-- necesario para que funcione log4j -->
+								<exclude>**/Log4j2Plugins.dat</exclude>
+							</excludes>
+						</filter>
+					</filters>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>shade</goal>
+						</goals>
+						<configuration>
+							<transformers>
+								<transformer
+										implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+									<mainClass>com.cobis.cloud.batch.aws.JobApp</mainClass>
+									<manifestEntries><!-- necesario para cambio de nivel de log -->
+										<Multi-Release>true</Multi-Release>
+									</manifestEntries>
+								</transformer>
+								<!-- necesario para cambio de nivel de log -->
+								<transformer
+										implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+							</transformers>
+						</configuration>
+					</execution>
+				</executions>
+				<dependencies>
+				</dependencies>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.8.1</version>
+				<configuration>
+					<annotationProcessorPaths>
+						<path>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+							<version>${lombok.version}</version>
+						</path>
+					</annotationProcessorPaths>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>

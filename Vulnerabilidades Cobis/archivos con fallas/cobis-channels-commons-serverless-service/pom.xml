@@ -1,0 +1,172 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>com.cobis.cloud.channelscommons</groupId>
+	<artifactId>cobis-channels-commons-serverless-service</artifactId>
+	<version>1.0.0</version>
+	<packaging>pom</packaging>
+
+	<properties>
+		<maven.compiler.source>8</maven.compiler.source>
+		<maven.compiler.target>8</maven.compiler.target>
+		<mysql.connector.version>8.0.18</mysql.connector.version>
+		<com.cobis.cloud.version>2.13.9</com.cobis.cloud.version>
+		<com.cobis.channels.commons.backend>1.0.11</com.cobis.channels.commons.backend>
+		<com.cobis.con.backend>2.2.5</com.cobis.con.backend>
+
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<java.version>1.8</java.version>
+		<sonar.language>java</sonar.language>
+		<sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
+		<sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
+		<sonar.coverage.jacoco.xmlReportPaths>
+			${project.basedir}/../cobis-channels-commons-batch/target/jacoco.xml,
+			${project.basedir}/../cobis-channels-commons-online/target/jacoco.xml
+		</sonar.coverage.jacoco.xmlReportPaths>
+		<sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/../target/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+		<sonar.jacoco.reportsPaths>${project.basedir}/../target/jacoco-ut.exec</sonar.jacoco.reportsPaths>
+		<sonar.jacoco.outputDirectory>${project.basedir}/../target/</sonar.jacoco.outputDirectory>
+		<sonar.sources>pom.xml,src/main/java</sonar.sources>
+		<sonar.tests>src/test/java</sonar.tests>
+	</properties>
+
+	<modules>
+		<module>cobis-channels-commons-batch</module>
+		<module>cobis-channels-commons-online</module>
+	</modules>
+
+	<!-- GENERAL DEPENDENCIES -->
+	<dependencies>
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>mysql</artifactId>
+			<version>1.15.2</version>
+			<scope>test</scope>
+		</dependency>
+
+
+	</dependencies>
+
+	<dependencyManagement>
+		<dependencies>
+
+			<dependency>
+				<groupId>com.cobis.cloud</groupId>
+				<artifactId>cobis-cloud-utils</artifactId>
+				<version>1.0.1</version>
+			</dependency>
+
+			<dependency>
+				<groupId>mysql</groupId>
+				<artifactId>mysql-connector-java</artifactId>
+				<version>${mysql.connector.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>com.cobis.cloud</groupId>
+				<artifactId>cobis-cloud-cts</artifactId>
+				<version>${com.cobis.cloud.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>com.cobis.cloud</groupId>
+				<artifactId>cobis-cloud-infra-bom</artifactId>
+				<version>${com.cobis.cloud.version}</version>
+				<scope>import</scope>
+				<type>pom</type>
+			</dependency>
+			
+			<dependency>
+				<groupId>com.cobiscorp.businesslogic</groupId>
+				<artifactId>cobis-channels-commons-backend</artifactId>
+				<version>${com.cobis.channels.commons.backend}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>junit</groupId>
+				<artifactId>junit</artifactId>
+				<version>4.12</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.mockito</groupId>
+				<artifactId>mockito-core</artifactId>
+				<version>3.2.4</version>
+			</dependency>
+
+         <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-lambda-java-core</artifactId>
+            <version>1.2.0</version>
+         </dependency>
+
+         <dependency>
+            <groupId>org.junit</groupId>
+            <artifactId>junit-bom</artifactId>
+            <version>5.7.1</version>
+            <type>pom</type>
+            <scope>import</scope>
+         </dependency>
+      </dependencies>
+   </dependencyManagement>
+
+   <build>
+      <plugins>
+         <plugin>
+            <groupId>org.sonarsource.scanner.maven</groupId>
+            <artifactId>sonar-maven-plugin</artifactId>
+            <version>3.6.0.1398</version>
+         </plugin>
+
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>2.22.2</version>
+         </plugin>
+
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <version>2.22.2</version>
+         </plugin>
+
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>0.8.6</version>
+				<executions>
+					<execution>
+						<id>default-prepare-agent</id>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+						<configuration>
+							<destFile>${sonar.jacoco.reportPath}</destFile>
+							<append>true</append>
+						</configuration>
+					</execution>
+					<execution>
+						<id>default-report</id>
+						<phase>test</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+						<configuration>
+							<dataFile>${sonar.jacoco.reportPath}</dataFile>
+							<append>true</append>
+							<outputEncoding>UTF-8</outputEncoding>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+   </build>
+
+</project>
