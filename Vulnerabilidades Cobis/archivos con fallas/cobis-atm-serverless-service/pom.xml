@@ -11,7 +11,8 @@
 	<properties>
 		<maven.compiler.source>8</maven.compiler.source>
 		<maven.compiler.target>8</maven.compiler.target>
-		<mysql.connector.version>8.0.18</mysql.connector.version>
+		<!-- Others security versions og mysql: <8.0.28> <8.0.30> <8.0.31> -->
+		<mysql.connector.version>8.0.29</mysql.connector.version>
 		<com.cobis.cloud.version>2.14.0</com.cobis.cloud.version>
 		<com.cobis.atm.backend>1.0.31</com.cobis.atm.backend>
 		<com.cobis.atm.backend.aws>1.0.32</com.cobis.atm.backend.aws>

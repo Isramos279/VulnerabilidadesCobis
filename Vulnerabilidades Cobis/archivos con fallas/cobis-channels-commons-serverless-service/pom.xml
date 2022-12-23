@@ -11,7 +11,8 @@
 	<properties>
 		<maven.compiler.source>8</maven.compiler.source>
 		<maven.compiler.target>8</maven.compiler.target>
-		<mysql.connector.version>8.0.18</mysql.connector.version>
+		<!-- Others security versions og mysql: <8.0.28> <8.0.30> <8.0.31> -->
+		<mysql.connector.version>8.0.29</mysql.connector.version>
 		<com.cobis.cloud.version>2.13.9</com.cobis.cloud.version>
 		<com.cobis.channels.commons.backend>1.0.11</com.cobis.channels.commons.backend>
 		<com.cobis.con.backend>2.2.5</com.cobis.con.backend>
@@ -88,11 +89,11 @@
 				<artifactId>cobis-channels-commons-backend</artifactId>
 				<version>${com.cobis.channels.commons.backend}</version>
 			</dependency>
-
+			<!-- Other security version of junit : 4.13.2	13 Feb, 2021-->
 			<dependency>
 				<groupId>junit</groupId>
 				<artifactId>junit</artifactId>
-				<version>4.12</version>
+				<version>4.13.1</version>
 				<scope>test</scope>
 			</dependency>
 			<dependency>

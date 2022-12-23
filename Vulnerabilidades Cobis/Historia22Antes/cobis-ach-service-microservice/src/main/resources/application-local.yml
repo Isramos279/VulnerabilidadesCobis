@@ -1,0 +1,123 @@
+spring:
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+        physical_naming_strategy: com.cobis.cloud.infra.microservice.commons.CobisPhysicalNamingStrategy
+  datasource:
+    driverClassName: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3366/cobis
+    username: admin
+    password: C0bis2019
+    hikari:
+      maximumPoolSize: 10
+      minimumIdle: 0
+
+management:
+  endpoint:
+    health:
+      show-details: always
+  endpoints:
+    health:
+      sensitive: false
+  health:
+    db:
+      enabled: true
+    defaults:
+      enabled: true
+aws:
+  region: us-east-1
+  poolId: us-east-1_1U2ky2y82
+  poolIdApp: us-east-1_NnvRNn0jT
+
+logging:
+  level:
+    org.hibernate.SQL: TRACE
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    com.cobiscorp.telered.messagetransformation: TRACE
+    com.cobis.xsell.rpc.executor: TRACE
+    com.cobis.ach.service: TRACE
+    com.cobiscorp.ecobis.achnetworkmanagement.bsl: TRACE
+
+authentication:
+  credentials:
+    authentication:
+      login: USERACH
+      password: Userach2021*#
+    subsidiary:
+      code: 1
+    branch:
+      code: 101
+    role:
+      code: 3
+  endpoint:
+    url: https://authentication-api.dev1.product.cobiscloud.com
+    path: /applications/v1/system-auth/authentication-role
+    apikey: 6mEXUs1m875KAdoo5Wawz6O8nuhBV5B13856JQSq
+    path-official-user-login: /users/v1/auth/authentication
+    path-official-user-role: /users/v1/auth/authentication/role-selection
+
+cobis:
+  restrpc:
+    connection-config:
+      -
+        name: ach
+        url: https://8trz524slh.execute-api.us-east-1.amazonaws.com
+        path: /v1/ach/executor
+        timeout: 15000
+        apiKey: dev1-dev1-qwertyuioplkjachyla7
+
+      -
+        name: accounts
+        url: https://fodun5giw0.execute-api.us-east-1.amazonaws.com
+        path: /v1/demand-deposits/executor
+        timeout: 15000
+        apiKey: dev1-qwertyuioplkjhgfdsadev1
+
+      -
+        name: customers
+        url: https://b79qs9po2b.execute-api.us-east-1.amazonaws.com
+        path: /v1/customers/executor
+        timeout: 15000
+        apiKey: dev1-qwertyuioplkjhgfdsa2dv
+
+      - name: channels
+        url: https://jqdkqsgov5.execute-api.us-east-1.amazonaws.com
+        apiKey: dev1-qwertyuioplkjhgfcha9-exec
+        path: /v1/channels-commons/executor
+        timeout: 15000
+
+integration:
+  ddaGeneric:
+    baseURL: https://ddaccounts-api.dev1.product.cobiscloud.com/generic/v1
+    apiKey: dev1-qwertyuioplkjhgfdsadev1
+    timeout: 60000
+  ddaTransactional:
+    baseURL: https://ddaccounts-api.dev1.product.cobiscloud.com/transactional/v1
+    apiKey: dev1-qwertyuioplkjhgfdsadev1
+    timeout: 60000
+  loans:
+    baseURL: https://loans-api.dev1.product.cobiscloud.com/loans/v1
+    apiKey: CR0ukzKPMK8Ep8WoRMWvU2NLJ7K3NNY96toGsorP
+    timeout: 60000
+  loansPayments:
+    baseURL: https://loans-api.dev1.product.cobiscloud.com/payments/v1
+    apiKey: CR0ukzKPMK8Ep8WoRMWvU2NLJ7K3NNY96toGsorP
+    timeout: 60000
+  loansTransactional:
+    baseURL: https://loans-api.dev1.product.cobiscloud.com/transactional/v1
+    apiKey: CR0ukzKPMK8Ep8WoRMWvU2NLJ7K3NNY96toGsorP
+    timeout: 60000
+  disbursementLoans:
+    baseURL: https://loans-api.dev1.product.cobiscloud.com/disbursements/v1
+    apiKey: CR0ukzKPMK8Ep8WoRMWvU2NLJ7K3NNY96toGsorP
+    timeout: 60000
+  tdeposits:
+    baseURL: https://lzf9wu5165.execute-api.us-east-1.amazonaws.com/v1
+    apiKey: dev1-tdecrtyuioplkjhgfdsi
+    timeout: 60000
+
+ach:
+  sqltimeout: 10000
+

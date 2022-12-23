@@ -1,0 +1,7 @@
+spring:
+  main:
+    # Se deshabilita exposicion de servicios rest
+    web-application-type: none
+    lazy-initialization: true
+loan:
+  apiAutogenerateUUID: true
