@@ -1,0 +1,64 @@
+spring:
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+        physical_naming_strategy: com.cobis.cloud.infra.microservice.commons.CobisPhysicalNamingStrategy
+  datasource:
+    driverClassName: com.amazonaws.secretsmanager.sql.AWSSecretsManagerMySQLDriver
+    hikari:
+      maximumPoolSize: 10
+      minimumIdle: 0
+
+management:
+  endpoint:
+    health:
+      show-details: always
+  endpoints:
+    health:
+      sensitive: false
+  health:
+    db:
+      enabled: true
+    defaults:
+      enabled: true
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+
+cobis:
+  restrpc:
+    connection-config:
+      -
+        name: admin
+        url: https://6t7qspjgec.execute-api.us-east-2.amazonaws.com
+        path: /v1/admin/executor
+        timeout: 15000
+        apiKey: admrtyuioplkjhgfdsiDEV-exec
+      -
+        name: accounts
+        url: https://dm1.api.ddaccounts.prd-ec.cobiscloud.com
+        path: /executor/v1/demand-deposits/executor
+        timeout: 15000
+        apiKey: qwertyuioplkjhgfdsadm1-exec
+      -
+        name: ach
+        url: https://bdstchcb6a.execute-api.us-east-1.amazonaws.com
+        apiKey: qwertyuioplkjachyla7-exec
+        path: /v1/ach/executor
+        timeout: 15000
+      -
+        name: mock
+        url: https://5fad4f28-9255-4460-ab54-541019dd8b7d.mock.pstmn.io
+        path: /v1/ach/executor
+        timeout: 15000
+      -
+        name: channels
+        url: https://kkzsftdm52.execute-api.us-east-1.amazonaws.com
+        apiKey: qwertyuioplkjhgfcha9-exec
+        path: /v1/channels-commons/executor
+        timeout: 15000

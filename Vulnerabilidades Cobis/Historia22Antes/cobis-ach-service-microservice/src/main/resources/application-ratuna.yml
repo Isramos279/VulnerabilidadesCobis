@@ -1,0 +1,146 @@
+spring:
+  cache:
+    jcache:
+      config: classpath:ehcache.xml
+  jackson:
+    date-format: yyyy-MM-dd'T'HH:mm:ss'Z'
+  jpa:
+    properties:
+      hibernate:
+        physical_naming_strategy: com.cobis.cloud.infra.microservice.commons.CobisPhysicalNamingStrategy
+        dialect: org.hibernate.dialect.MySQLDialect
+        generate_statistics: true
+        format_sql: true
+    show-sql: true
+  datasource:
+    driverClassName: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3366/cobis
+    username: userach
+    password: Us3r4chD3v1
+    hikari:
+      maximumPoolSize: 10
+      minimumIdle: 0
+
+  liquibase:
+    change-log: classpath:/db/changelog/changelog-cobis.xml
+    liquibase-schema: cobis
+    enabled: false
+
+management:
+  endpoint:
+    health:
+      show-details: always
+  endpoints:
+    health:
+      sensitive: false
+  health:
+    db:
+      enabled: true
+    defaults:
+      enabled: true
+
+logging:
+  level:
+    Root: INFO
+    org:
+      hibernate:
+        SQL: INFO
+        type:
+          descriptor:
+            sql:
+              BasicBinder: TRACE
+
+aws:
+  region: us-east-1
+  poolId: us-east-1_1U2ky2y82
+  poolIdApp: us-east-1_NnvRNn0jT
+
+cobis:
+  restrpc:
+    connection-config:
+      -
+        name: ach
+        url:  https://o6unj05lm1.execute-api.us-east-1.amazonaws.com
+        path: /v1/ach/executor
+        timeout: 15000
+        apiKey: dev1-dev1-qwertyuioplkjachyla7
+
+      -
+        name: accounts
+        url:  https://44q6l5ht0f.execute-api.us-east-1.amazonaws.com
+        path: /v1/demand-deposits/executor
+        timeout: 15000
+        apiKey: dev1-qwertyuioplkjhgfdsadev1
+
+      -
+        name: customers
+        url:  https://f0eq6z7adh.execute-api.us-east-1.amazonaws.com
+        path: /v1/customers/executor
+        timeout: 15000
+        apiKey: z9iRygzjwi3njUdMn2RTF5fYFpVSgkKM7LEgokw5
+
+      - name: channels
+        url: https://jqdkqsgov5.execute-api.us-east-1.amazonaws.com
+        apiKey: dev1-qwertyuioplkjhgfcha9-exec
+        path: /v1/channels-commons/executor
+        timeout: 15000
+
+      - name: adminCatalogs
+        url: https://zss2nhgl3c.execute-api.us-east-1.amazonaws.com
+        path: /v1
+        timeout: 15000
+
+authentication:
+  credentials:
+    authentication:
+      login: USERACH
+      password: Userach2021*#
+    subsidiary:
+      code: 1
+    branch:
+      code: 101
+    role:
+      code: 99
+  endpoint:
+    url: https://authentication-api.dev1.product.cobiscloud.com
+    path: /applications/v1/system-auth/authentication-role
+    apikey: 6mEXUs1m875KAdoo5Wawz6O8nuhBV5B13856JQSq
+    path-official-user-login: /users/v1/auth/authentication
+    path-official-user-role: /users/v1/auth/authentication/role-selection
+
+integration:
+  adminCatalogs:
+    baseUrl: https://zss2nhgl3c.execute-api.us-east-1.amazonaws.com
+    path: /v1
+    timeout: 60000
+  dda:
+    baseURL: https://39qecz9r0f.execute-api.us-east-1.amazonaws.com/v1
+    apiKey: dev1-qwertyuioplkjhgfdsadev1
+    timeout: 60000
+  ddaTransactional:
+    baseURL: https://ddaccounts-api.dev1.product.cobiscloud.com/transactional/v1
+    apiKey: dev1-qwertyuioplkjhgfdsadev1
+    timeout: 60000
+  loans:
+    baseURL: https://hk2g1f3py6.execute-api.us-east-1.amazonaws.com/v1
+    apiKey: ggkX1ngdKl1Uij5vKp23a2WyG6tyrhLU2psVQrUL
+    readTimeout: 500
+    connectTimeout: 500
+  loansPayments:
+    baseURL: https://1pca510i12.execute-api.us-east-1.amazonaws.com/v1
+    apiKey: ggkX1ngdKl1Uij5vKp23a2WyG6tyrhLU2psVQrUL
+  loansTransactional:
+    baseURL: https://gotf1pp9d1.execute-api.us-east-1.amazonaws.com/v1
+    apiKey: ggkX1ngdKl1Uij5vKp23a2WyG6tyrhLU2psVQrUL
+  disbursementLoans:
+    baseURL: https://loans-api.dev1.product.cobiscloud.com/disbursements/v1
+    apiKey: ggkX1ngdKl1Uij5vKp23a2WyG6tyrhLU2psVQrUL
+  tdeposits:
+    baseURL: https://lzf9wu5165.execute-api.us-east-1.amazonaws.com/v1
+    apiKey: dev1-tdecrtyuioplkjhgfdsi
+  pconsolidator:
+    baseURL: https://ij5ur692x5.execute-api.us-east-1.amazonaws.com/v1
+    apiKey: dev1-ma-dev1-qwertyuioplkjhgfcha9-payments-consolidator
+    timeout: 80000
+ach:
+  sqltimeout: 60000
