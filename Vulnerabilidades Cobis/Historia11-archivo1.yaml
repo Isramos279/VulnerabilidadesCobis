@@ -189,9 +189,24 @@ Resources:
       VpcId: !Ref VPC
       GroupDescription: Grupo de seguridad de base de datos
       GroupName: !Join ['-', [!Ref EnvironmentId , "gp-database-private-zone-sg"]]
-      SecurityGroupEgress: #Elimina el Default Egress
-      - CidrIp: !Join ['/', ['127.0.0.1' , !Ref Mask]]  
-        IpProtocol: "-1"
+      VpcId: !Ref vpcId
+      Tags:
+        - Key: "Name"
+          Value: "ach service security group"
+      SecurityGroupEgress:
+      - CidrIp: 10.128.0.0/16 
+        FromPort: 3333
+        IpProtocol: tcp
+        ToPort: 3333
+      - CidrIp: 10.128.0.0/16
+        FromPort: 8079
+        IpProtocol: tcp
+        ToPort: 8079
+      SecurityGroupIngress:
+      - CidrIp: 10.128.0.0/16  
+        FromPort: 443
+        IpProtocol: tcp
+        ToPort: 443
       Tags:
         - Key: Name
           Value: !Join ['-', [!Ref EnvironmentId , "gp-database-private-zone-sg"]]
@@ -523,9 +538,24 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       GroupDescription: Grupo seguridad VPC endpoint    
-      SecurityGroupEgress: #Elimina el Default Egress
-      - CidrIp: !Join ['/', ['127.0.0.1' , !Ref Mask]]  
-        IpProtocol: "-1"  
+     VpcId: !Ref vpcId
+      Tags:
+        - Key: "Name"
+          Value: "ach service security group"
+      SecurityGroupEgress:
+      - CidrIp: 10.128.0.0/16 
+        FromPort: 3333
+        IpProtocol: tcp
+        ToPort: 3333
+      - CidrIp: 10.128.0.0/16
+        FromPort: 8079
+        IpProtocol: tcp
+        ToPort: 8079
+      SecurityGroupIngress:
+      - CidrIp: 10.128.0.0/16  
+        FromPort: 443
+        IpProtocol: tcp
+        ToPort: 443 
       GroupName: !Join ['-', [!Ref EnvironmentId , "core-vpc-endpoints-sg"]]
       Tags:
         - Key: Name

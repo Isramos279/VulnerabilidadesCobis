@@ -17,6 +17,8 @@ Parameters:
   SubnetsIdsParam:
     Type: CommaDelimitedList
     Description: "Identificador de las subnets donde se desplegará el API de desarrollo (Deben estar entre comillas dobles y separadas por comas)."
+  dockerTag:
+    Type: String
   ContainerAtmImageParam:
     Type: String
   ContainerTcpImageParam:
@@ -69,7 +71,7 @@ Parameters:
     Description: "Versión del módulo o aplicación a la que pertenece el componente."
   EnvironmentType:
     Type: String
-    AllowedValues: [PRODUCTION, STAGING, QUALITY, DEVELOPMENT]
+    AllowedValues: [Production, Staging, Quality, Development, Integration, Formation, Migration, Preproduction]
     ConstraintDescription: must specify PRODUCTION, STAGING, QUALITY or DEVELOPMENT.
   TenantId:
     Type: String
@@ -120,7 +122,7 @@ Resources:
             - ''
             - - !Ref EnvironmentId
               - '-atm-cis-container'
-          Image: !Ref ContainerAtmImageParam
+          Image: !Sub ${ContainerAtmImageParam}:${dockerTag}
           Cpu: !Ref ContainerCPU
           Memory: !Ref ContainerMemory
           LogConfiguration:
@@ -740,7 +742,6 @@ Resources:
       LoadBalancerArn: !Ref LoadBalancer
       Port: !Ref ENVAdminPort
       Protocol: TCP
-      SslPolicy: ELBSecurityPolicy-2016-08
 
   LoadBalancerListenerOperative:
     Type: AWS::ElasticLoadBalancingV2::Listener
@@ -751,7 +752,6 @@ Resources:
       LoadBalancerArn: !Ref LoadBalancer
       Port: !Ref ENVOperativePort
       Protocol: TCP
-      SslPolicy: ELBSecurityPolicy-2016-08
 
   LoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
@@ -772,7 +772,6 @@ Resources:
           Value: !Sub "${EnvironmentId}-baseplatform-loadbalancerslogs-${AwsAccountIdToDeploy}"
         - Key: access_logs.s3.prefix
           Value: !Sub "${EnvironmentId}-network-tcphandler-load-balancer"
-      
       Tags:
         - Key: "ORGANIZATION"
           Value: !Ref Organization
