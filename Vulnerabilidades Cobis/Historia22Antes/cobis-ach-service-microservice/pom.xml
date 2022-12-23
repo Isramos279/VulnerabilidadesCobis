@@ -1,0 +1,380 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <artifactId>cobis-ach-service-microservice</artifactId>
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.cobis.ach.service</groupId>
+        <artifactId>cobis-ach-service-parent</artifactId>
+        <version>${revision}</version>
+        <relativePath>../cobis-ach-service-parent</relativePath>
+    </parent>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.amazonaws.secretsmanager</groupId>
+            <artifactId>aws-secretsmanager-jdbc</artifactId>
+            <version>1.0.5</version>
+        </dependency>
+        <dependency>
+            <groupId>com.cobiscorp.cobis.utils</groupId>
+            <artifactId>cobis-db-constants-${dbinfo.dbtype}</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.cobis.xsell</groupId>
+            <artifactId>cobis-xsell-logger-manager</artifactId>
+            <version>${cobis.cloud.infrastructure.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-logging</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-log4j2</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-cache</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <scope>runtime</scope>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>com.cobis.cloud.infra</groupId>
+            <artifactId>aws-authentication-helper</artifactId>
+            <version>${cobis.cloud.infrastructure.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.cobiscorp.cobis</groupId>
+                    <artifactId>COBISCommons</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.cobiscorp.cobis.cts</groupId>
+                    <artifactId>cts-services-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>software.amazon.awssdk</groupId>
+                    <artifactId>regions</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>software.amazon.awssdk</groupId>
+                    <artifactId>s3</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>com.cobis.cloud.infra</groupId>
+            <artifactId>cobis-infra-security</artifactId>
+            <version>${cobis.cloud.infrastructure.security.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>software.amazon.awssdk</groupId>
+                    <artifactId>regions</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.cobis.xsell.commons</groupId>
+            <artifactId>cobis-xsell-commons-pseudocatalogs</artifactId>
+            <version>${cobis.cloud.infrastructure.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.cobis.ach.service</groupId>
+            <artifactId>cobis-ach-service-rest</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!--DGO: Dependencias de migracion-->
+        <dependency>
+            <groupId>com.cobis.ach.service</groupId>
+            <artifactId>cobis-achnetworkmanagement-bsl-impl</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.cobis.ach.service</groupId>
+            <artifactId>cobis-achnetworkprovider-impl</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.cobis.ach.service</groupId>
+            <artifactId>cobis-achnetworkmanagement-dal</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.cobis.ach.service</groupId>
+            <artifactId>cobis-isoswitchservice-dal</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.cobis.ach.service</groupId>
+            <artifactId>cobis-isoswitchservice-bsl-impl</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.cobis.ach.service</groupId>
+            <artifactId>cobis-achnetworkprovider</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.cobis.ach.service</groupId>
+            <artifactId>cobis-achnetworkoperation-bsl-impl</artifactId>
+            <version>${project.version}</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.cobis.ach.service</groupId>
+            <artifactId>cobis-achnetworkoperation-dal</artifactId>
+            <version>${project.version}</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.cobis.ach.service</groupId>
+            <artifactId>cobis-ach-read-file-impl</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.cobis.ach.service</groupId>
+            <artifactId>cobis-isoprdservice-bsl-impl</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.cobis.ach.service</groupId>
+            <artifactId>cobis-achintegrationcore-bsl-impl</artifactId>
+            <version>${project.version}</version>					 
+        </dependency>
+
+        <dependency>
+            <groupId>com.cobis.ach.service</groupId>
+            <artifactId>cobis-ach-job-processing-bsl</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>com.cobis.ach.service</groupId>
+            <artifactId>cobis-ach-job-processing-bsl-impl</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.cobis.ach.service</groupId>
+            <artifactId>cobis-ach-job-processing-restrpc</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>mysql</artifactId>
+            <version>1.15.0-rc2</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.cobis.cloud.infra</groupId>
+            <artifactId>cobis-integration-test-api</artifactId>
+            <version>${cobis.cloud.infrastructure.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.cobis.cloud.infra</groupId>
+            <artifactId>cobis-integration-test-security-aws</artifactId>
+            <version>${cobis.cloud.infrastructure.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.cobis.cloud.infra</groupId>
+            <artifactId>cobis-cloud-infra-microservice-healthcheck-mysql</artifactId>
+            <version>${cobis.cloud.infrastructure.version}</version>
+        </dependency>
+        <!-- 
+		Version 4.1.1 con vulnerabilidades
+		<dependency>
+			<groupId>org.liquibase</groupId>
+			<artifactId>liquibase-core</artifactId>
+			<version>4.1.1</version>
+			<scope>test</scope>
+		</dependency>
+		Versiones disponibles
+
+		4.8.0 ; 4.9.0 ; 4.9.1 ; 4.10.0 -> 4.18.0
+		-->
+		<dependency>
+			<groupId>org.liquibase</groupId>
+			<artifactId>liquibase-core</artifactId>
+			<version>4.8.0</version>
+			<scope>test</scope>
+		</dependency>
+
+        <dependency>
+            <groupId>com.cobis.cloud.infra</groupId>
+            <artifactId>cobis-xsell-rpc-executor-api</artifactId>
+            <version>${cobis.cloud.infrastructure.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.cobis.cloud.infra</groupId>
+            <artifactId>cobis-xsell-rpc-executor-impl</artifactId>
+            <version>${cobis.cloud.infrastructure.version}</version>
+        </dependency>
+
+
+        <dependency>
+            <groupId>com.cobis.ach.service</groupId>
+            <artifactId>cobis.ach.service.commons</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!--xsell-->
+        <dependency>
+            <groupId>com.cobis.xsell.dda</groupId>
+            <artifactId>cobis-xsell-dda-bsl-dto</artifactId>
+            <version>${com.cobis.xsell.dda.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.cobis.xsell.dda</groupId>
+            <artifactId>cobis-xsell-dda-bsl-api</artifactId>
+            <version>${com.cobis.xsell.dda.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.cobis.xsell.dda</groupId>
+            <artifactId>cobis-xsell-dda-bsl-impl</artifactId>
+            <version>${com.cobis.xsell.dda.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.cobis.xsell.loans</groupId>
+            <artifactId>cobis-xsell-loans-bsl-api</artifactId>
+            <version>${com.cobis.xsell.loan.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.cobis.xsell.loans</groupId>
+            <artifactId>cobis-xsell-loans-bsl-impl</artifactId>
+            <version>${com.cobis.xsell.loan.version}</version>
+        </dependency>
+        <!--xsell end-->
+
+        <dependency>
+            <groupId>com.cobiscorp.cobis.language.framework</groupId>
+            <artifactId>cobis-language-commons</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-test</artifactId>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/software.amazon.awssdk/sfn -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>sfn</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-s3</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.cobiscorp.ach.iso.reader-writer.job</groupId>
+            <artifactId>ValidateInJob</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.cobiscorp.ach.iso.reader-writer.job</groupId>
+            <artifactId>TransformInJob</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.cobiscorp.ach.iso.reader-writer.job</groupId>
+            <artifactId>TransformOutJob</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.cobiscorp.ach.iso.reader-writer.s3</groupId>
+            <artifactId>ISO-S3</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.cobiscorp.ach.iso.reader-writer.entities</groupId>
+            <artifactId>ISO-Entities</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.cobiscorp.ach.iso.reader-writer.validations</groupId>
+            <artifactId>ISO-Validations</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.cobis.ach.service</groupId>
+            <artifactId>cobis-ach-batch-service-upload-job</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.cobis.ach.service</groupId>
+            <artifactId>cobis-ach-service-microservice-config</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.liquibase</groupId>
+                <artifactId>liquibase-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+    <properties>
+        <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/${aggregate.report.dir}</sonar.coverage.jacoco.xmlReportPaths>
+    </properties>
+</project>
