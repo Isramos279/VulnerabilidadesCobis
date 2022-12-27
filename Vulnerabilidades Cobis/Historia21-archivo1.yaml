@@ -1,0 +1,297 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  ach-service
+
+  SAM Template for ach-service Load Config
+
+Parameters:
+  ApplicationId:
+    Type: String
+    Description: 'ID de la aplicación'
+  ConfigurationProfileName:
+    Type: String
+    Description: 'ID de la configuración del perfil'
+  EnvironmentId:
+    Type: String
+    Description: 'Identificador del ambiente'
+
+Resources:
+  DependentConfigurationProfile:
+    Type: AWS::AppConfig::ConfigurationProfile
+    Properties:
+      ApplicationId: !Ref ApplicationId
+      Name: !Ref ConfigurationProfileName
+      LocationUri: "hosted"
+
+  HostedConfigurationVersion:
+    Type: AWS::AppConfig::HostedConfigurationVersion
+    Properties:
+      ApplicationId: !Ref ApplicationId
+      ConfigurationProfileId: !Ref DependentConfigurationProfile
+      Description: 'Configuración de versión local'
+      Content: '
+      {
+				"stack-outputs": [
+					"${ENVIRONMENT_ID}-BasePlatform",
+					"${ENVIRONMENT_ID}-cobis-core-auth"
+				],
+      	"parameters": {
+      		"environmentId": "prd",
+      		"environmentIdBase": "prd",
+			"logRetentionDays": "7",
+      		"region": "us-east-1",
+      		"environmentIdBaseFront": "prd",
+      		"environmentType": "PRODUCTION",
+      		"awsAccountId": "157784360931",
+      		"awsAccountSharedAccount": "125277160564",
+      		"generalPurposeSubnetsId": "subnet-0f14ea8149d60d88d,subnet-00298c73699d87734",
+      		"generalPurposeSecurityGroupsIds": "sg-04a7e63935bae7a69",
+      		"databaseSecretArn": "arn:aws:secretsmanager:us-east-1:157784360931:secret:/prd/ACH/database/credentials-52P45J",
+      		"apiGatewayType": "REGIONAL",
+      		"vpcEndpointId": "NA",
+			"domainName": "ach-web.prd.product.cobiscloud.com",
+      		"allowedDomains": "*"
+      	},
+      	"pipeline": {
+      		"project": {
+      			"module": "ach",
+      			"project-key": "cobis-ach-serverless-service-aws",
+      			"teams-webhook-url": "https://cobiscorp.webhook.office.com/webhookb2/908ef33d-333c-4e52-9b8d-f99384958437@a5e6fcaa-5535-41e3-8d08-2b6676750a3f/JenkinsCI/427888c932e0453386fb500d568a0e17/38ccebc1-db05-415d-bed6-83938d1a4c7c",
+      			"backend-repo-url": "https://dev.azure.com/cobiscorp/COB/_git/cobis-ach-backend-aws",
+      			"backend-branch": "master"
+      		},
+      		"liquibase": {
+      			"liquibase-s3-bucket": "${environmentIdBase}-cobis-cicd-core-resources-virginia-${awsAccountId}",
+      			"liquibase-batch-job-queue": "${environmentIdBase}-cobis-gp-environment-queue",
+      			"liquibase-batch-job-definition": "${environmentIdBase}-liquibase-executor-job-definition",
+      			"liquibase-db-names": "cob_channels,cobis,cob_ach,cob_ach_his",
+      			"liquibase-db-log-sufijo": "ACH",
+      			"liquibase-deploy-enable": "true"
+      		},
+      		"soapui": {
+      			"soapui-s3-bucket": "${environmentIdBase}-cobis-cicd-core-resources-virginia-${awsAccountId}",
+      			"soapui-batch-job-queue": "${environmentIdBase}-cobis-gp-fg-environment-queue",
+      			"soapui-batch-job-definition": "${environmentIdBase}-soapui-executor-fg-job-definition",
+				"soapui-api-endpoint": "https://${domainName}/order/v1",
+      			"soapui-execute-enable": "true",
+      			"authentication-role": 3,
+      			"cognito-parameters": ""
+      		},
+      		"deploy": {
+      			"stack-name": "${environmentId}-ach",
+      			"s3-bucket": "${environmentIdBase}-cobis-cicd-core-resources-virginia-${awsAccountId}",
+      			"prefix": "${environmentId}",
+      			"aws-default-region": "${region}",
+      			"capabilities": "CAPABILITY_IAM CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM",
+      			"non-confirm-change-set": "true",
+      			"parameters": [
+      				{
+      					"parameterKey": "Module",
+      					"parameterValue": "Ach"
+      				},
+					{
+						"parameterKey": "LogRetentionDays",
+						"parameterValue": "${logRetentionDays}"
+					},
+      				{
+      					"parameterKey": "SharedResourcesAccount",
+      					"parameterValue": "${awsAccountSharedAccount}"
+      				},
+      				{
+      					"parameterKey": "LambdaAuthorizer",
+      					"parameterValue": "auth-authorization-challenge"
+      				},
+      				{
+      					"parameterKey": "Organization",
+      					"parameterValue": "Cobiscorp"
+      				},
+      				{
+      					"parameterKey": "Version",
+      					"parameterValue": "1.0.1"
+      				},
+      				{
+      					"parameterKey": "TenantId",
+      					"parameterValue": "t1"
+      				},
+      				{
+      					"parameterKey": "ProcessingType",
+      					"parameterValue": "ONLINE"
+      				},
+      				{
+      					"parameterKey": "StageMainVersionName",
+      					"parameterValue": "v1"
+      				},
+      				{
+      					"parameterKey": "LambdaAliasProduction",
+      					"parameterValue": "production"
+      				},
+      				{
+      					"parameterKey": "LambdaAliasBeta",
+      					"parameterValue": "beta"
+      				},
+      				{
+      					"parameterKey": "DBConnectionExpirationTime",
+      					"parameterValue": 300
+      				},
+      				{
+      					"parameterKey": "EnvironmentIdBase",
+      					"parameterValue": "${environmentIdBase}"
+      				},
+      				{
+      					"parameterKey": "EnvironmentType",
+      					"parameterValue": "${environmentType}"
+      				},
+      				{
+      					"parameterKey": "EnvironmentId",
+      					"parameterValue": "${environmentId}"
+      				},
+      				{
+      					"parameterKey": "RegionToDeploy",
+      					"parameterValue": "${region}"
+      				},
+      				{
+      					"parameterKey": "AWSBatchServiceRole",
+      					"parameterValue": "arn:aws:iam::${awsAccountId}:role/${environmentIdBase}-batch-compute-service-role"
+      				},
+      				{
+      					"parameterKey": "AwsAccountIdToDeploy",
+      					"parameterValue": "${awsAccountId}"
+      				},
+      				{
+      					"parameterKey": "ValueApiKey",
+      					"parameterValue": "${environmentIdBase}-qwertyuioplkjachyla7"
+      				},
+      				{
+      					"parameterKey": "SecurityGroupIds",
+      					"parameterValue": "${generalPurposeSecurityGroupsIds}"
+      				},
+      				{
+      					"parameterKey": "SubnetIds",
+      					"parameterValue": "${generalPurposeSubnetsId}"
+      				},
+      				{
+      					"parameterKey": "StageName",
+      					"parameterValue": "v1"
+      				},
+      				{
+      					"parameterKey": "LambdaAliasProduction",
+      					"parameterValue": "production"
+      				},
+      				{
+      					"parameterKey": "LambdaAliasBeta",
+      					"parameterValue": "beta"
+      				},
+      				{
+      					"parameterKey": "StageMainVersionName",
+      					"parameterValue": "v1"
+      				},
+      				{
+      					"parameterKey": "SecretArn",
+      					"parameterValue": "${databaseSecretArn}"
+      				},
+      				{
+      					"parameterKey": "EnvironmentIdBaseFront",
+      					"parameterValue": "${environmentIdBaseFront}"
+      				},
+      				{
+      					"parameterKey": "ExtDemandDepositsApiKey",
+      					"parameterValue": "stg1-stg1-qwertyuioplkjhgfdsastg"
+      				},
+      				{
+      					"parameterKey": "ExtLoansApiKey",
+      					"parameterValue": "stg1-stg1-Kl6YQq9KM43XTGKr60bhZ1ebqYm2ChHe81eQoLHG"
+      				},
+      				{
+      					"parameterKey": "ExtDemandDeposits",
+      					"parameterValue": "https://cyb90m3qkd.execute-api.us-east-1.amazonaws.com/v1/demand-deposits/executor"
+      				},
+      				{
+      					"parameterKey": "ExtLoans",
+      					"parameterValue": "https://ass3vyl3k2.execute-api.us-east-1.amazonaws.com/v1/loans/executor"
+      				},
+      				{
+      					"parameterKey": "MainDomain",
+      					"parameterValue": "ach,general"
+      				},
+      				{
+      					"parameterKey": "Project",
+      					"parameterValue": "CoreServerless"
+      				},
+      				{
+      					"parameterKey": "Package",
+      					"parameterValue": "COBIS_CORE_BANKING"
+      				},
+      				{
+      					"parameterKey": "DockerRepository",
+      					"parameterValue": "cobis/ach/service"
+      				},
+      				{
+      					"parameterKey": "LogLevel",
+      					"parameterValue": "INFO"
+      				},
+      				{
+      					"parameterKey": "DbTarget",
+      					"parameterValue": "master"
+      				},
+      				{
+      					"parameterKey": "TimeZone",
+      					"parameterValue": "America/Bogota"
+      				},
+      				{
+      					"parameterKey": "AchExecutorLambdaConfiguration",
+      					"parameterValue": "1024:2:0:0:0:0:INFO"
+      				},
+      				{
+      					"parameterKey": "ApiGatewayType",
+      					"parameterValue": "${apiGatewayType}"
+      				},
+      				{
+      					"parameterKey": "VPCEndpointId",
+      					"parameterValue": "${vpcEndpointId}"
+      				},
+      				{
+      					"parameterKey": "AchMicroserviceUrl",
+      					"parameterValue": "http://internal-qa1-gp-private-load-balancer-2008585544.us-east-1.elb.amazonaws.com:8079/cobis/ach"
+      				},
+      				{
+      					"parameterKey": "ClientCertificateId",
+      					"parameterValue": "NOVALUE"
+      				},
+      				{
+      					"parameterKey": "VpcConnectionId",
+      					"parameterValue": "lb27i9"
+      				},
+      				{
+      					"parameterKey": "WithWebACL",
+      					"parameterValue": "false"
+      				},
+      				{
+      					"parameterKey": "WebACLArn",
+      					"parameterValue": "NA"
+      				},
+      				{
+      					"parameterKey": "AllowedDomains",
+      					"parameterValue": "${allowedDomains}"
+      				},
+      				{
+      					"parameterKey": "LoggingBucket",
+      					"parameterValue": "${environmentIdBase}-baseplatform-serveraccesslogs-${awsAccountId}"
+					},
+					{
+						"parameterKey": "DomainName",
+						"parameterValue": "${domainName}"
+					},
+					{
+						"parameterKey": "SystemUsersTokenValidationKeySet",
+						"parameterValue": "${${ENVIRONMENT_ID}-cobis-core-auth:SystemsUserPoolJWKS}"
+					},
+					{
+						"parameterKey": "OfficialUsersTokenValidationKeySet",
+						"parameterValue": "${${ENVIRONMENT_ID}-cobis-core-auth:OfficialsUserPoolJWKS}"
+					}
+      			]
+      		}
+      	}
+      }'
+      ContentType: 'JSON'
