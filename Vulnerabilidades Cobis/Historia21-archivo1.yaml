@@ -252,7 +252,7 @@ Resources:
       				},
       				{
       					"parameterKey": "AchMicroserviceUrl",
-      					"parameterValue": "http://internal-qa1-gp-private-load-balancer-2008585544.us-east-1.elb.amazonaws.com:8079/cobis/ach"
+      					"parameterValue": "https://internal-qa1-gp-private-load-balancer-2008585544.us-east-1.elb.amazonaws.com:8079/cobis/ach"
       				},
       				{
       					"parameterKey": "ClientCertificateId",
