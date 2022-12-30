@@ -1,6 +1,6 @@
 FROM 125277160564.dkr.ecr.us-east-1.amazonaws.com/cobis/cts-cis-serverless:cobis-cloud-cis-microservice-3.0.8
 USER root
-RUN chmod -R 777 /opt/cobishome-cis-micro/
+RUN chmod -R 600 /opt/cobishome-cis-micro/
 RUN addgroup -S appgroup && adduser --shell /sbin/nologin --disabled-password --no-create-home -S appuser -G appgroup
 USER appuser
 COPY target/app.jar /opt
